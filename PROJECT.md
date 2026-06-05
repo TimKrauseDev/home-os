@@ -1,6 +1,6 @@
 # Home OS Project Overview
 
-This document captures product and architecture context for Home OS.
+This document captures product and architecture context for Home OS. test
 
 Use `AGENTS.md` for agent working instructions. Use this file for what the project is, how it is shaped, and why decisions were made.
 
