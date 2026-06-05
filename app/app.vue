@@ -17,8 +17,8 @@ useHead({
   }
 })
 
-const title = 'Home CFO'
-const description = 'Home CFO is a personal finance management app. Take control of your finances with budgeting, expense tracking, and financial goal setting all in one place.'
+const title = 'Home OS'
+const description = 'Home OS is a locally hosted household operations app for managing finances, maintenance, projects, gardening, and private home workflows.'
 
 useSeoMeta({
   title,
