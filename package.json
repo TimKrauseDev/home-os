@@ -16,7 +16,6 @@
     "db:migrate:new": "supabase migration new",
     "db:reset": "supabase db reset --linked",
     "db:seed:budget": "node --env-file=.env database/seed-budget.js",
-    "db:seed:planner": "node --env-file=.env database/seed-planner.js",
     "supabase:types": "npx supabase gen types typescript --project-id bkkuxqoqrqbbwuiuykso --schema public > database/database.types.ts"
   },
   "dependencies": {

@@ -1,45 +1,23 @@
-<script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui'
-
-const pageTitle = ref('Overview')
-const pageDescription = ref('Get a complete overview of your garden')
-const links = [[{
-  label: 'Overview',
-  icon: 'i-lucide-layout-dashboard',
-  to: '/gardening',
-  exact: true
-}, {
-  label: 'Inventory',
-  icon: 'i-lucide-package',
-  to: '/gardening/inventory'
-}, {
-  label: 'Calendar',
-  icon: 'i-lucide-calendar',
-  to: '/gardening/calendar'
-}, {
-  label: 'Tasks',
-  icon: 'i-lucide-list-todo',
-  to: '/gardening/tasks'
-}]] satisfies NavigationMenuItem[][]
-</script>
-
 <template>
-  <UPageCard variant="naked" orientation="horizontal" class="mb-4">
-    <UNavigationMenu :items="links" highlight class="-mx-1 flex-1" />
-  </UPageCard>
-  <UPageCard
-    :title="pageTitle"
-    :description="pageDescription"
-    variant="naked"
-    orientation="horizontal"
-    class="mb-4"
-  />
+  <div class="flex flex-col gap-4 sm:gap-6">
+    <UPageCard
+      title="Gardening"
+      description="Seed catalog, sowing windows, and planting reminders for the household garden."
+      icon="i-lucide-sprout"
+      variant="subtle"
+    />
 
-  <UPageCard variant="subtle">
-    <div class="space-y-4">
-      <p class="text-muted-foreground">
-        Your garden overview will appear here.
-      </p>
+    <div class="grid gap-4 md:grid-cols-2">
+      <UPageCard
+        title="Plant Soon"
+        description="Upcoming sowing windows will appear here after the Gardening schema is built."
+        icon="i-lucide-calendar-clock"
+      />
+      <UPageCard
+        title="Seed Catalog"
+        description="The main seed table will track variety, source, rating, timing, and growing details."
+        icon="i-lucide-table-properties"
+      />
     </div>
-  </UPageCard>
+  </div>
 </template>

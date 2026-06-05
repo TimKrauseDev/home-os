@@ -1,22 +1,8 @@
-<script setup lang="ts">
-const pageTitle = ref('Overview')
-const pageDescription = ref('Get a complete overview of your freelance business')
-</script>
-
 <template>
   <UPageCard
-    :title="pageTitle"
-    :description="pageDescription"
-    variant="naked"
-    orientation="horizontal"
-    class="mb-4"
+    title="Freelance"
+    description="Future workspace. This domain is intentionally out of v1 unless it becomes needed."
+    icon="i-lucide-briefcase"
+    variant="subtle"
   />
-
-  <UPageCard variant="subtle">
-    <div class="space-y-4">
-      <p class="text-muted-foreground">
-        Your freelance overview will appear here.
-      </p>
-    </div>
-  </UPageCard>
 </template>

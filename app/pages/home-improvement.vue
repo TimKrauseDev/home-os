@@ -4,39 +4,23 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 const links = [[{
   label: 'Overview',
   icon: 'i-lucide-layout-dashboard',
-  to: '/budgeting',
+  to: '/home-improvement',
   exact: true
 }, {
-  label: 'Accounts',
-  icon: 'i-lucide-landmark',
-  to: '/budgeting/accounts'
+  label: 'Projects',
+  icon: 'i-lucide-folder-kanban',
+  to: '/home-improvement/projects'
 }, {
-  label: 'Transactions',
-  icon: 'i-lucide-receipt-text',
-  to: '/budgeting/transactions'
-}, {
-  label: 'Categories',
-  icon: 'i-lucide-tags',
-  to: '/budgeting/categories'
-}, {
-  label: 'Savings',
-  icon: 'i-lucide-piggy-bank',
-  to: '/budgeting/savings-buckets'
-}, {
-  label: 'Settle Up',
-  icon: 'i-lucide-hand-coins',
-  to: '/budgeting/settlements'
-}, {
-  label: 'Imports',
-  icon: 'i-lucide-upload',
-  to: '/budgeting/imports'
+  label: 'Todos',
+  icon: 'i-lucide-list-todo',
+  to: '/home-improvement/todos'
 }]] satisfies NavigationMenuItem[][]
 </script>
 
 <template>
-  <UDashboardPanel id="budgeting" :ui="{ body: 'lg:py-8' }">
+  <UDashboardPanel id="home-improvement" :ui="{ body: 'lg:py-8' }">
     <template #header>
-      <UDashboardNavbar title="Budgeting">
+      <UDashboardNavbar title="Home Improvement">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>

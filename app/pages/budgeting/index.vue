@@ -1,22 +1,16 @@
-<script setup lang="ts">
-const pageTitle = ref('Overview')
-const pageDescription = ref('Get a complete overview of your financial status')
-</script>
-
 <template>
-  <UPageCard
-    :title="pageTitle"
-    :description="pageDescription"
-    variant="naked"
-    orientation="horizontal"
-    class="mb-4"
-  />
+  <div class="flex flex-col gap-4 sm:gap-6">
+    <UPageCard
+      title="Budgeting"
+      description="Household finances, transactions, category goals, savings buckets, and settlement tasks."
+      icon="i-lucide-wallet"
+      variant="subtle"
+    />
 
-  <UPageCard variant="subtle">
-    <div class="space-y-4">
-      <p class="text-muted-foreground">
-        Your budgeting overview will appear here.
-      </p>
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <UPageCard title="Balances" description="Account totals and cash position will appear here." icon="i-lucide-landmark" />
+      <UPageCard title="Budget Health" description="Category progress and money in/out will appear here." icon="i-lucide-chart-no-axes-combined" />
+      <UPageCard title="Settle Up" description="Household payback tasks will appear here." icon="i-lucide-hand-coins" />
     </div>
-  </UPageCard>
+  </div>
 </template>

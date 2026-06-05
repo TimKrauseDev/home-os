@@ -2,45 +2,76 @@
 import type { NavigationMenuItem } from '@nuxt/ui'
 import HeaderLogo from '~/components/HeaderLogo.vue'
 
-const route = useRoute()
-const toast = useToast()
-
 const open = ref(false)
+const closeSidebar = () => {
+  open.value = false
+}
 
 const links = [[{
   label: 'Home',
   icon: 'i-lucide-house',
   to: '/',
-  onSelect: () => {
-    open.value = false
-  }
+  onSelect: closeSidebar
 }, {
-  label: 'Planner',
-  to: '/planner',
-  icon: 'i-lucide-folder-open',
+  label: 'Gardening',
+  to: '/gardening',
+  icon: 'i-lucide-sprout',
   defaultOpen: true,
   type: 'trigger',
   children: [{
     label: 'Overview',
-    to: '/planner',
+    to: '/gardening',
     exact: true,
-    onSelect: () => {
-      open.value = false
-    }
+    onSelect: closeSidebar
   }, {
-    label: 'Projects',
-    to: '/planner/projects',
-    onSelect: () => {
-      open.value = false
-    }
+    label: 'Seed Catalog',
+    to: '/gardening/seed-catalog',
+    onSelect: closeSidebar
+  }, {
+    label: 'Planting Tasks',
+    to: '/gardening/tasks',
+    onSelect: closeSidebar
+  }]
+}, {
+  label: 'Maintenance',
+  to: '/home-maintenance',
+  icon: 'i-lucide-wrench',
+  defaultOpen: false,
+  type: 'trigger',
+  children: [{
+    label: 'Overview',
+    to: '/home-maintenance',
+    exact: true,
+    onSelect: closeSidebar
   }, {
     label: 'Tasks',
-    to: '/planner/tasks',
-    onSelect: () => {
-      open.value = false
-    }
+    to: '/home-maintenance/tasks',
+    onSelect: closeSidebar
+  }, {
+    label: 'History',
+    to: '/home-maintenance/history',
+    onSelect: closeSidebar
   }]
-
+}, {
+  label: 'Improvements',
+  to: '/home-improvement',
+  icon: 'i-lucide-hammer',
+  defaultOpen: false,
+  type: 'trigger',
+  children: [{
+    label: 'Overview',
+    to: '/home-improvement',
+    exact: true,
+    onSelect: closeSidebar
+  }, {
+    label: 'Projects',
+    to: '/home-improvement/projects',
+    onSelect: closeSidebar
+  }, {
+    label: 'Todos',
+    to: '/home-improvement/todos',
+    onSelect: closeSidebar
+  }]
 }, {
   label: 'Budgeting',
   to: '/budgeting',
@@ -51,69 +82,31 @@ const links = [[{
     label: 'Overview',
     to: '/budgeting',
     exact: true,
-    onSelect: () => {
-      open.value = false
-    }
+    onSelect: closeSidebar
   }, {
     label: 'Accounts',
     to: '/budgeting/accounts',
-    onSelect: () => {
-      open.value = false
-    }
+    onSelect: closeSidebar
   }, {
     label: 'Transactions',
     to: '/budgeting/transactions',
-    onSelect: () => {
-      open.value = false
-    }
+    onSelect: closeSidebar
   }, {
-    label: 'Cash Flow',
-    to: '/budgeting/cash-flow',
-    onSelect: () => {
-      open.value = false
-    }
+    label: 'Categories',
+    to: '/budgeting/categories',
+    onSelect: closeSidebar
   }, {
-    label: 'Reports',
-    to: '/budgeting/reports',
-    onSelect: () => {
-      open.value = false
-    }
+    label: 'Savings Buckets',
+    to: '/budgeting/savings-buckets',
+    onSelect: closeSidebar
   }, {
-    label: 'Budget',
-    to: '/budgeting/budget',
-    onSelect: () => {
-      open.value = false
-    }
+    label: 'Settle Up',
+    to: '/budgeting/settlements',
+    onSelect: closeSidebar
   }, {
-    label: 'Recurring',
-    to: '/budgeting/recurring',
-    onSelect: () => {
-      open.value = false
-    }
-  }, {
-    label: 'Investments',
-    to: '/budgeting/investments',
-    onSelect: () => {
-      open.value = false
-    }
-  }, {
-    label: '20k Spending',
-    to: '/budgeting/20k-spending',
-    onSelect: () => {
-      open.value = false
-    }
-  }, {
-    label: 'Savings Sectioning',
-    to: '/budgeting/savings-sectioning',
-    onSelect: () => {
-      open.value = false
-    }
-  }, {
-    label: 'Statement Uploader',
-    to: '/budgeting/statement-uploader',
-    onSelect: () => {
-      open.value = false
-    }
+    label: 'Imports',
+    to: '/budgeting/imports',
+    onSelect: closeSidebar
   }]
 }, {
   label: 'Freelance',
@@ -125,91 +118,7 @@ const links = [[{
     label: 'Overview',
     to: '/freelance',
     exact: true,
-    onSelect: () => {
-      open.value = false
-    }
-  }, {
-    label: 'Earnings',
-    to: '/freelance/earnings',
-    onSelect: () => {
-      open.value = false
-    }
-  }, {
-    label: 'Tasks',
-    to: '/freelance/tasks',
-    onSelect: () => {
-      open.value = false
-    }
-  }, {
-    label: 'Clients',
-    to: '/freelance/clients',
-    onSelect: () => {
-      open.value = false
-    }
-  }, {
-    label: 'Invoice Generator',
-    to: '/freelance/invoice-generator',
-    onSelect: () => {
-      open.value = false
-    }
-  }, {
-    label: 'Time Tracker',
-    to: '/freelance/time-tracker',
-    onSelect: () => {
-      open.value = false
-    }
-  }]
-}, {
-  label: 'Gardening',
-  to: '/gardening',
-  icon: 'i-lucide-sprout',
-  defaultOpen: false,
-  type: 'trigger',
-  children: [{
-    label: 'Overview',
-    to: '/gardening',
-    exact: true,
-    onSelect: () => {
-      open.value = false
-    }
-  }, {
-    label: 'Inventory',
-    to: '/gardening/inventory',
-    onSelect: () => {
-      open.value = false
-    }
-  }, {
-    label: 'Calendar',
-    to: '/gardening/calendar',
-    onSelect: () => {
-      open.value = false
-    }
-  }, {
-    label: 'Tasks',
-    to: '/gardening/tasks',
-    onSelect: () => {
-      open.value = false
-    }
-  }]
-}, {
-  label: 'Backup',
-  to: '/',
-  icon: 'i-lucide-database',
-  defaultOpen: false,
-  type: 'trigger',
-  children: [{
-    label: 'Inbox',
-    to: '/inbox',
-    badge: '4',
-    onSelect: () => {
-      open.value = false
-    }
-  }, {
-    label: 'Customer',
-    to: '/customers',
-    onSelect: () => {
-      open.value = false
-    }
+    onSelect: closeSidebar
   }]
 }, {
   label: 'Settings',
@@ -221,80 +130,27 @@ const links = [[{
     label: 'General',
     to: '/settings',
     exact: true,
-    onSelect: () => {
-      open.value = false
-    }
+    onSelect: closeSidebar
   }, {
     label: 'Members',
     to: '/settings/members',
-    onSelect: () => {
-      open.value = false
-    }
+    onSelect: closeSidebar
   }, {
     label: 'Notifications',
     to: '/settings/notifications',
-    onSelect: () => {
-      open.value = false
-    }
+    onSelect: closeSidebar
   }, {
     label: 'Security',
     to: '/settings/security',
-    onSelect: () => {
-      open.value = false
-    }
+    onSelect: closeSidebar
   }]
-}], [{
-  label: 'Feedback',
-  icon: 'i-lucide-message-circle',
-  to: 'https://github.com/nuxt-ui-templates/dashboard',
-  target: '_blank'
-}, {
-  label: 'Help & Support',
-  icon: 'i-lucide-info',
-  to: 'https://github.com/nuxt-ui-templates/dashboard',
-  target: '_blank'
 }]] satisfies NavigationMenuItem[][]
 
 const groups = computed(() => [{
   id: 'links',
   label: 'Go to',
   items: links.flat()
-}, {
-  id: 'code',
-  label: 'Code',
-  items: [{
-    id: 'source',
-    label: 'View page source',
-    icon: 'i-simple-icons-github',
-    to: `https://github.com/nuxt-ui-templates/dashboard/blob/main/app/pages${route.path === '/' ? '/index' : route.path}.vue`,
-    target: '_blank'
-  }]
 }])
-
-onMounted(async () => {
-  const cookie = useCookie('cookie-consent')
-  if (cookie.value === 'accepted') {
-    return
-  }
-
-  toast.add({
-    title: 'We use first-party cookies to enhance your experience on our website.',
-    duration: 0,
-    close: false,
-    actions: [{
-      label: 'Accept',
-      color: 'neutral',
-      variant: 'outline',
-      onClick: () => {
-        cookie.value = 'accepted'
-      }
-    }, {
-      label: 'Opt out',
-      color: 'neutral',
-      variant: 'ghost'
-    }]
-  })
-})
 </script>
 
 <template>
@@ -321,14 +177,6 @@ onMounted(async () => {
           tooltip
           popover
         />
-
-        <UNavigationMenu
-          :collapsed="collapsed"
-          :items="links[1]"
-          orientation="vertical"
-          tooltip
-          class="mt-auto"
-        />
       </template>
 
       <template #footer="{ collapsed }">
@@ -339,7 +187,5 @@ onMounted(async () => {
     <UDashboardSearch :groups="groups" />
 
     <slot />
-
-    <NotificationsSlideover />
   </UDashboardGroup>
 </template>

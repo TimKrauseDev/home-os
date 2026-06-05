@@ -1,9 +1,5 @@
-<script setup lang="ts">
-
-</script>
-
 <template>
-  <UDashboardPanel id="freelance" :ui="{ body: 'lg:py-12' }">
+  <UDashboardPanel id="freelance" :ui="{ body: 'lg:py-8' }">
     <template #header>
       <UDashboardNavbar title="Freelance">
         <template #leading>
@@ -13,7 +9,7 @@
     </template>
 
     <template #body>
-      <div class="">
+      <div class="mx-auto w-full max-w-6xl">
         <NuxtPage />
       </div>
     </template>
