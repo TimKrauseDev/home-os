@@ -36,7 +36,7 @@ Keep product intent, architecture notes, setup commands, and active decisions he
 - Preview: `pnpm preview`.
 - Lint: `pnpm lint`.
 - Typecheck: `pnpm typecheck`.
-- Database tools: `pnpm db:migrate:new`, `pnpm db:reset`, `pnpm db:seed:garden`, `pnpm supabase:types`.
+- Database tools: `pnpm db:migrate:new`, `pnpm db:reset`, `pnpm db:seed`, `pnpm db:seed:garden`, `pnpm db:seed:maintenance`, `pnpm db:seed:improvement`, `pnpm db:seed:budgeting`, `pnpm db:seed:settings`, `pnpm db:seed:dashboard`, `pnpm db:seed:freelance`, `pnpm supabase:types`.
 - Main UI layout and navigation live in `app/layouts/default.vue`.
 
 ## Product Domains

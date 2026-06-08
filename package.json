@@ -15,7 +15,14 @@
     "supabase:link": "supabase link --project-ref amhnqdisvvpzxhzsjdbg",
     "db:migrate:new": "supabase migration new",
     "db:reset": "supabase db reset --linked",
+    "db:seed": "node --env-file=.env database/seed-all.js",
     "db:seed:garden": "node --env-file=.env database/seed-gardening.js",
+    "db:seed:maintenance": "node --env-file=.env database/seed-home-maintenance.js",
+    "db:seed:improvement": "node --env-file=.env database/seed-home-improvement.js",
+    "db:seed:budgeting": "node --env-file=.env database/seed-budgeting.js",
+    "db:seed:settings": "node --env-file=.env database/seed-settings.js",
+    "db:seed:dashboard": "node --env-file=.env database/seed-dashboard.js",
+    "db:seed:freelance": "node --env-file=.env database/seed-freelance.js",
     "supabase:types": "npx supabase gen types typescript --project-id amhnqdisvvpzxhzsjdbg --schema public > database/database.types.ts"
   },
   "dependencies": {

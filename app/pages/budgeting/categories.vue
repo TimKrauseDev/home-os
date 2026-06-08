@@ -1,33 +1,31 @@
 <script setup lang="ts">
-const stats = [
-  { label: 'Categories', value: '32 active', icon: 'i-lucide-tags' },
-  { label: 'Over Goal', value: '3', icon: 'i-lucide-triangle-alert' },
-  { label: 'Under Goal', value: '21', icon: 'i-lucide-check' },
-  { label: 'Track Only', value: '8', icon: 'i-lucide-eye' }
-]
-const sections = [
-  {
-    title: 'Category Goals',
-    description: 'Monthly limits and savings targets.',
-    icon: 'i-lucide-gauge',
-    items: ['Groceries · keep under $700', 'Restaurants · keep under $250', 'House repairs · track only', 'Vacation · save at least $300']
-  },
-  {
-    title: 'Goal Behaviors',
-    description: 'Budget goals can mean different things by category.',
-    icon: 'i-lucide-sliders-horizontal',
-    items: ['Keep under for expense limits', 'Spend exactly for planned bills', 'Save at least for buckets', 'Track only when a goal is not useful']
-  }
-]
+const fields = [
+  { key: 'name', label: 'Category', required: true },
+  { key: 'group_name', label: 'Group' },
+  { key: 'category_type', label: 'Type', type: 'select', options: [{ label: 'Income', value: 'income' }, { label: 'Expense', value: 'expense' }, { label: 'Transfer', value: 'transfer' }, { label: 'Savings', value: 'savings' }] },
+  { key: 'monthly_goal_amount', label: 'Monthly Goal', type: 'number' },
+  { key: 'goal_behavior', label: 'Goal Behavior', type: 'select', options: [{ label: 'Keep Under', value: 'keep_under' }, { label: 'Spend Exactly', value: 'spend_exactly' }, { label: 'Save At Least', value: 'save_at_least' }, { label: 'Track Only', value: 'track_only' }] },
+  { key: 'is_active', label: 'Active', type: 'checkbox' },
+  { key: 'notes', label: 'Notes', type: 'textarea', table: false }
+] as const
 </script>
 
 <template>
-  <DomainScaffold
+  <DomainTablePage
     title="Categories"
     description="Budget categories, monthly goals, groupings, and merchant defaults."
     icon="i-lucide-tags"
+    add-label="Add Category"
+    empty-label="No budget categories yet."
     :actions="[{ label: 'Transactions', icon: 'i-lucide-receipt-text', to: '/budgeting/transactions' }]"
-    :stats="stats"
-    :sections="sections"
+    :fields="fields"
+    table-name="budget_categories"
+    :order-by="{ column: 'sort_order', ascending: true }"
+    :stats="[
+      { label: 'Categories', value: '3 active', icon: 'i-lucide-tags' },
+      { label: 'Expense', value: '2', icon: 'i-lucide-arrow-up-right' },
+      { label: 'Savings', value: '1', icon: 'i-lucide-piggy-bank' },
+      { label: 'Track Only', value: '0', icon: 'i-lucide-eye' }
+    ]"
   />
 </template>

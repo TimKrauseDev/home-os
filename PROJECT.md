@@ -62,7 +62,14 @@ It prioritizes:
 - Typecheck: pnpm typecheck
 - Generate Supabase migration: pnpm db:migrate:new
 - Reset linked database: pnpm db:reset
+- Seed all fake data: pnpm db:seed
 - Seed gardening data: pnpm db:seed:garden
+- Seed maintenance data: pnpm db:seed:maintenance
+- Seed improvement data: pnpm db:seed:improvement
+- Seed budgeting data: pnpm db:seed:budgeting
+- Seed settings data: pnpm db:seed:settings
+- Seed dashboard data: pnpm db:seed:dashboard
+- Seed freelance data: pnpm db:seed:freelance
 - Generate Supabase TypeScript types: pnpm supabase:types
 
 ## Planned App Structure and Entry Points

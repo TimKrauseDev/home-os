@@ -1,33 +1,34 @@
 <script setup lang="ts">
-const stats = [
-  { label: 'This Month', value: '128 rows', icon: 'i-lucide-receipt-text' },
-  { label: 'Unreviewed', value: '18', icon: 'i-lucide-circle-help' },
-  { label: 'Uncategorized', value: '9', icon: 'i-lucide-tags' },
-  { label: 'Imports', value: '3 files', icon: 'i-lucide-upload' }
-]
-const sections = [
-  {
-    title: 'Transaction Review',
-    description: 'Imported rows with merchant and category controls.',
-    icon: 'i-lucide-list-filter',
-    items: ['Mortgage · housing · -$2,000', 'Shared card payment · transfer · -$500', 'Grocery store · groceries · -$142.18', 'Paycheck · income · $3,625']
-  },
-  {
-    title: 'Merchant Defaults',
-    description: 'Defaults help categorize imports without locking each transaction.',
-    icon: 'i-lucide-store',
-    items: ['Set default category per merchant', 'Change individual transaction category independently', 'Offer update previous transactions for same merchant', 'Keep raw CSV row data for troubleshooting']
-  }
-]
+const fields = [
+  { key: 'transaction_date', label: 'Date', type: 'date', required: true },
+  { key: 'account_id', label: 'Account', type: 'select', required: true, optionSource: { tableName: 'budget_accounts', labelColumn: 'name' } },
+  { key: 'merchant_id', label: 'Merchant Default', type: 'select', optionSource: { tableName: 'budget_merchants', labelColumn: 'name' } },
+  { key: 'merchant', label: 'Merchant Text' },
+  { key: 'description', label: 'Description', required: true },
+  { key: 'category_id', label: 'Category', type: 'select', optionSource: { tableName: 'budget_categories', labelColumn: 'name' } },
+  { key: 'amount', label: 'Amount', type: 'number', required: true },
+  { key: 'transaction_type', label: 'Type', type: 'select', options: [{ label: 'Income', value: 'income' }, { label: 'Expense', value: 'expense' }, { label: 'Transfer', value: 'transfer' }, { label: 'Adjustment', value: 'adjustment' }] },
+  { key: 'status', label: 'Status', type: 'select', options: [{ label: 'Pending', value: 'pending' }, { label: 'Cleared', value: 'cleared' }, { label: 'Reviewed', value: 'reviewed' }, { label: 'Ignored', value: 'ignored' }] },
+  { key: 'notes', label: 'Notes', type: 'textarea', table: false }
+] as const
 </script>
 
 <template>
-  <DomainScaffold
+  <DomainTablePage
     title="Transactions"
     description="Imported and manually entered transactions for review, categorization, and merchant defaults."
     icon="i-lucide-receipt-text"
+    add-label="Add Transaction"
+    empty-label="No transactions yet."
     :actions="[{ label: 'CSV Imports', icon: 'i-lucide-upload', to: '/budgeting/imports' }, { label: 'Categories', icon: 'i-lucide-tags', to: '/budgeting/categories' }]"
-    :stats="stats"
-    :sections="sections"
+    :fields="fields"
+    table-name="budget_transactions"
+    :order-by="{ column: 'transaction_date', ascending: false }"
+    :stats="[
+      { label: 'Rows', value: '3', icon: 'i-lucide-receipt-text' },
+      { label: 'Money In', value: '$3,625', icon: 'i-lucide-arrow-down-left' },
+      { label: 'Money Out', value: '$2,142', icon: 'i-lucide-arrow-up-right' },
+      { label: 'Unreviewed', value: '1', icon: 'i-lucide-circle-help' }
+    ]"
   />
 </template>

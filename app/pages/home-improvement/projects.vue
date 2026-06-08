@@ -1,33 +1,32 @@
 <script setup lang="ts">
-const stats = [
-  { label: 'Idea', value: '5', icon: 'i-lucide-lightbulb' },
-  { label: 'Planned', value: '3', icon: 'i-lucide-calendar' },
-  { label: 'In Progress', value: '2', icon: 'i-lucide-loader-circle' },
-  { label: 'Completed', value: '7', icon: 'i-lucide-check' }
-]
-const sections = [
-  {
-    title: 'Project Board',
-    description: 'A practical project list before detailed CRUD.',
-    icon: 'i-lucide-folder-kanban',
-    items: ['Office shelves · in progress · office · $450 est', 'Guest bath refresh · blocked · bathroom · $1,200 est', 'Garden bed rebuild · planned · yard · $650 est', 'Garage storage · idea · garage · $900 est']
-  },
-  {
-    title: 'Project Fields',
-    description: 'The shape this page should persist later.',
-    icon: 'i-lucide-database',
-    items: ['Title, description, status, priority', 'Area or room', 'Target dates and completion date', 'Estimated total, actual total, long-form notes']
-  }
-]
+const fields = [
+  { key: 'title', label: 'Project', required: true },
+  { key: 'status', label: 'Status', type: 'select', options: [{ label: 'Idea', value: 'idea' }, { label: 'Planned', value: 'planned' }, { label: 'In Progress', value: 'in_progress' }, { label: 'Blocked', value: 'blocked' }, { label: 'Completed', value: 'completed' }, { label: 'Canceled', value: 'canceled' }, { label: 'Archived', value: 'archived' }] },
+  { key: 'priority', label: 'Priority', type: 'select', options: [{ label: 'Low', value: 'low' }, { label: 'Medium', value: 'medium' }, { label: 'High', value: 'high' }] },
+  { key: 'area', label: 'Area' },
+  { key: 'estimated_total', label: 'Estimated', type: 'number' },
+  { key: 'actual_total', label: 'Actual', type: 'number' },
+  { key: 'target_end_date', label: 'Target End', type: 'date' },
+  { key: 'notes', label: 'Notes', type: 'textarea', table: false }
+] as const
 </script>
 
 <template>
-  <DomainScaffold
+  <DomainTablePage
     title="Projects"
     description="Project status, priority, room or area, dates, notes, links, and pricing."
     icon="i-lucide-folder-kanban"
+    add-label="Add Project"
+    empty-label="No projects yet."
     :actions="[{ label: 'Todos', icon: 'i-lucide-list-todo', to: '/home-improvement/todos' }]"
-    :stats="stats"
-    :sections="sections"
+    :fields="fields"
+    table-name="home_improvement_projects"
+    :order-by="{ column: 'target_end_date', ascending: true }"
+    :stats="[
+      { label: 'Active', value: '1', icon: 'i-lucide-hammer' },
+      { label: 'Blocked', value: '1', icon: 'i-lucide-octagon-alert' },
+      { label: 'Estimated', value: '$2,300', icon: 'i-lucide-dollar-sign' },
+      { label: 'Planned', value: '1', icon: 'i-lucide-calendar' }
+    ]"
   />
 </template>

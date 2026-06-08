@@ -1,32 +1,29 @@
 <script setup lang="ts">
-const stats = [
-  { label: 'Members', value: '2 active', icon: 'i-lucide-users' },
-  { label: 'Email', value: '2 recipients', icon: 'i-lucide-mail' },
-  { label: 'Budget Owners', value: 'Self, spouse', icon: 'i-lucide-wallet' },
-  { label: 'Push', value: 'ntfy later', icon: 'i-lucide-bell' }
-]
-const sections = [
-  {
-    title: 'Household Members',
-    description: 'People who can receive reminders and own budget accounts.',
-    icon: 'i-lucide-users',
-    items: ['Self · app owner · budget owner', 'Spouse · household member · budget owner', 'Notification recipients can differ by domain', 'Future permissions can stay simple']
-  },
-  {
-    title: 'Member Preferences',
-    description: 'Settings to wire after auth and notifications exist.',
-    icon: 'i-lucide-user-cog',
-    items: ['Email address', 'Reminder channels', 'Budget settlement display name', 'Domain-specific notification toggles']
-  }
-]
+const fields = [
+  { key: 'name', label: 'Member', required: true },
+  { key: 'role', label: 'Role', type: 'select', options: [{ label: 'Owner', value: 'owner' }, { label: 'Household Member', value: 'household_member' }] },
+  { key: 'email', label: 'Email' },
+  { key: 'budget_owner', label: 'Budget Owner Label' },
+  { key: 'receives_email', label: 'Email Reminders', type: 'checkbox' },
+  { key: 'notes', label: 'Notes', type: 'textarea', table: false }
+] as const
 </script>
 
 <template>
-  <DomainScaffold
+  <DomainTablePage
     title="Household Members"
     description="Household member preferences, budget ownership, and notification recipients."
     icon="i-lucide-users"
-    :stats="stats"
-    :sections="sections"
+    add-label="Add Member"
+    empty-label="No household members yet."
+    :fields="fields"
+    table-name="household_members"
+    :order-by="{ column: 'name', ascending: true }"
+    :stats="[
+      { label: 'Members', value: '2 active', icon: 'i-lucide-users' },
+      { label: 'Email', value: '2 recipients', icon: 'i-lucide-mail' },
+      { label: 'Budget Owners', value: 'Self, spouse', icon: 'i-lucide-wallet' },
+      { label: 'Push', value: 'ntfy later', icon: 'i-lucide-bell' }
+    ]"
   />
 </template>

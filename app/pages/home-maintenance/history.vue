@@ -1,33 +1,28 @@
 <script setup lang="ts">
-const stats = [
-  { label: 'This Month', value: '5 done', icon: 'i-lucide-calendar-check' },
-  { label: 'This Year', value: '18 done', icon: 'i-lucide-check' },
-  { label: 'Follow-ups', value: '3 notes', icon: 'i-lucide-message-square' },
-  { label: 'Skipped', value: '2 tasks', icon: 'i-lucide-forward' }
-]
-const sections = [
-  {
-    title: 'Recent Completions',
-    description: 'Long-term household memory for maintenance work.',
-    icon: 'i-lucide-history',
-    items: ['Cleaned dryer vent · noted light lint buildup', 'Changed HVAC filter · 20x25x1', 'Checked smoke detectors · all passed', 'Cleaned gutters · back side needs guard repair']
-  },
-  {
-    title: 'Useful History Details',
-    description: 'Keep this lightweight so completion is easy.',
-    icon: 'i-lucide-notebook',
-    items: ['Completed date', 'Who completed it', 'One notes field', 'Link back to recurring task']
-  }
-]
+const fields = [
+  { key: 'task_id', label: 'Task', type: 'select', required: true, optionSource: { tableName: 'home_maintenance_tasks', labelColumn: 'title' } },
+  { key: 'completed_at', label: 'Completed', type: 'date' },
+  { key: 'completed_by', label: 'Completed By' },
+  { key: 'notes', label: 'Notes', type: 'textarea' }
+] as const
 </script>
 
 <template>
-  <DomainScaffold
+  <DomainTablePage
     title="Maintenance History"
     description="Completed maintenance records, simple notes, and follow-up context."
     icon="i-lucide-history"
+    add-label="Add Completion"
+    empty-label="No maintenance completions yet."
     :actions="[{ label: 'Tasks', icon: 'i-lucide-list-checks', to: '/home-maintenance/tasks' }]"
-    :stats="stats"
-    :sections="sections"
+    :fields="fields"
+    table-name="home_maintenance_completions"
+    :order-by="{ column: 'completed_at', ascending: false }"
+    :stats="[
+      { label: 'This Month', value: '2', icon: 'i-lucide-calendar-check' },
+      { label: 'This Year', value: '18', icon: 'i-lucide-check' },
+      { label: 'With Notes', value: '3', icon: 'i-lucide-message-square' },
+      { label: 'Tracked Tasks', value: '4', icon: 'i-lucide-link' }
+    ]"
   />
 </template>

@@ -1,33 +1,32 @@
 <script setup lang="ts">
-const stats = [
-  { label: 'Files', value: '3 this month', icon: 'i-lucide-file-spreadsheet' },
-  { label: 'Created', value: '128 rows', icon: 'i-lucide-plus' },
-  { label: 'Skipped', value: '4 rows', icon: 'i-lucide-forward' },
-  { label: 'Needs Review', value: '18 rows', icon: 'i-lucide-circle-help' }
-]
-const sections = [
-  {
-    title: 'CSV Import Flow',
-    description: 'Manual import path before bank integrations.',
-    icon: 'i-lucide-upload',
-    items: ['Choose account and institution', 'Upload CSV file', 'Map columns to transaction fields', 'Apply merchant defaults and preserve raw row data']
-  },
-  {
-    title: 'Recent Imports',
-    description: 'Import batches and health checks.',
-    icon: 'i-lucide-file-clock',
-    items: ['Checking CSV · 72 created · 2 skipped', 'Shared card CSV · 41 created · 1 skipped', 'Savings CSV · 15 created · 1 skipped']
-  }
-]
+const fields = [
+  { key: 'file_name', label: 'File', required: true },
+  { key: 'account_id', label: 'Account', type: 'select', required: true, optionSource: { tableName: 'budget_accounts', labelColumn: 'name' } },
+  { key: 'institution', label: 'Institution' },
+  { key: 'imported_at', label: 'Imported', type: 'date' },
+  { key: 'row_count', label: 'Rows', type: 'number' },
+  { key: 'created_count', label: 'Created', type: 'number' },
+  { key: 'skipped_count', label: 'Skipped', type: 'number' },
+  { key: 'notes', label: 'Notes', type: 'textarea', table: false }
+] as const
 </script>
 
 <template>
-  <DomainScaffold
+  <DomainTablePage
     title="CSV Imports"
     description="Upload institution CSV files, review imported rows, and apply merchant defaults."
     icon="i-lucide-upload"
+    add-label="Add Import Batch"
+    empty-label="No import batches yet."
     :actions="[{ label: 'Transactions', icon: 'i-lucide-receipt-text', to: '/budgeting/transactions' }]"
-    :stats="stats"
-    :sections="sections"
+    :fields="fields"
+    table-name="budget_transaction_imports"
+    :order-by="{ column: 'imported_at', ascending: false }"
+    :stats="[
+      { label: 'Files', value: '2', icon: 'i-lucide-file-spreadsheet' },
+      { label: 'Created', value: '110 rows', icon: 'i-lucide-plus' },
+      { label: 'Skipped', value: '3 rows', icon: 'i-lucide-forward' },
+      { label: 'Needs Review', value: '1 file', icon: 'i-lucide-circle-help' }
+    ]"
   />
 </template>
