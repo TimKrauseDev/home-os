@@ -24,6 +24,9 @@ export default defineNuxtConfig({
   srcDir: 'app/',
 
   routeRules: {
+    '/gardening/tasks': {
+      ssr: false
+    },
     '/api/**': {
       cors: true
     }

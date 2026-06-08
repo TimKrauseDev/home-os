@@ -62,7 +62,7 @@ It prioritizes:
 - Typecheck: pnpm typecheck
 - Generate Supabase migration: pnpm db:migrate:new
 - Reset linked database: pnpm db:reset
-- Seed budgeting data: pnpm db:seed:budget
+- Seed gardening data: pnpm db:seed:garden
 - Generate Supabase TypeScript types: pnpm supabase:types
 
 ## Planned App Structure and Entry Points
@@ -130,13 +130,14 @@ Seed catalog fields:
 - Variety, such as Black Krim.
 - Days to emerge.
 - Days to maturity.
-- Seed depth in inches.
-- Row spacing in inches.
+- Seed depth in inches: 0, 0.125, 0.25, 0.5, 0.75, or 1.
+- Row spacing in whole inches.
 - Deer resistance flag.
 - Sun type, such as full sun, partial sun, or shade.
 - Purchased from.
-- Source image URL or stored image reference from the seed vendor.
-- Overall rating.
+- Source page URL from the seed vendor.
+- Source image URL cached from the source page social preview image, or entered manually.
+- Overall rating from 1-5.
 - Notes.
 
 Gardening timing context:
@@ -170,13 +171,14 @@ Gardening v1 data model:
 - `succession_interval_days`: optional interval for repeat sowing reminders.
 - `days_to_emerge`: optional number.
 - `days_to_maturity`: optional number.
-- `seed_depth_inches`: optional decimal number.
-- `row_spacing_inches`: optional decimal number.
+- `seed_depth_inches`: optional enum value of 0, 0.125, 0.25, 0.5, 0.75, or 1.
+- `row_spacing_inches`: optional integer.
 - `is_deer_resistant`: optional boolean.
 - `sun_type`: full_sun, partial_sun, partial_shade, shade, or unknown.
 - `purchased_from`: seed vendor or store.
-- `source_image_url`: image URL from the seed vendor.
-- `overall_rating`: optional numeric rating.
+- `source_page_url`: seed vendor product page URL.
+- `source_image_url`: cached image URL from the source page social preview image, or a manually entered image URL.
+- `overall_rating`: optional numeric rating from 1-5.
 - `notes`: long-form notes.
 - `created_at`: created timestamp.
 - `updated_at`: updated timestamp.
@@ -210,8 +212,17 @@ Gardening timing calculation:
 
 - Store frost-relative timing as structured sowing window records rather than a single text field.
 - A seed can have multiple sowing windows, such as inside 10-12 weeks before last frost and outside 1-2 weeks after last frost.
+- Treat a sowing window as recommended when its `sow_method` matches the seed's `recommended_sow_method`.
 - Keep the original sheet wording available through notes if useful during import.
 - Use Ebony, Virginia frost dates as configurable app settings before calculating planting windows.
+
+Gardening source images:
+
+- Store the seed vendor page URL separately from the cached image URL.
+- Fetch social preview metadata only when creating, editing, or manually refreshing a seed image.
+- Prefer `og:image` first, then `twitter:image`, then other page image metadata.
+- Do not scrape seed vendor pages while browsing the catalog.
+- Allow manual image URL entry when metadata is missing, blocked, or broken.
 
 ### Home Maintenance V1
 

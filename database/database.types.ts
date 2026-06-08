@@ -10,200 +10,181 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
-      accounts: {
-        Row: {
-          account_type: Database["public"]["Enums"]["account_type"]
-          avatar_url: string | null
-          balance: number
-          created_at: string | null
-          id: string
-          institution: string
-          name: string
-          updated_at: string | null
-        }
-        Insert: {
-          account_type: Database["public"]["Enums"]["account_type"]
-          avatar_url?: string | null
-          balance?: number
-          created_at?: string | null
-          id?: string
-          institution: string
-          name: string
-          updated_at?: string | null
-        }
-        Update: {
-          account_type?: Database["public"]["Enums"]["account_type"]
-          avatar_url?: string | null
-          balance?: number
-          created_at?: string | null
-          id?: string
-          institution?: string
-          name?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      categories: {
-        Row: {
-          created_at: string | null
-          id: string
-          name: string
-          slug: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          name: string
-          slug: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          name?: string
-          slug?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      projects: {
+      garden_seed_sowing_windows: {
         Row: {
           created_at: string
-          description: string
-          due_date: string | null
           id: string
-          name: string
-          status: Database["public"]["Enums"]["project_status"]
+          notes: string | null
+          seed_id: string
+          sow_direction: Database["public"]["Enums"]["garden_sow_direction"]
+          sow_end_weeks: number
+          sow_method: Database["public"]["Enums"]["garden_sow_method"]
+          sow_reference: Database["public"]["Enums"]["garden_sow_reference"]
+          sow_start_weeks: number
           updated_at: string
         }
         Insert: {
           created_at?: string
-          description?: string
-          due_date?: string | null
           id?: string
-          name: string
-          status?: Database["public"]["Enums"]["project_status"]
+          notes?: string | null
+          seed_id: string
+          sow_direction: Database["public"]["Enums"]["garden_sow_direction"]
+          sow_end_weeks: number
+          sow_method: Database["public"]["Enums"]["garden_sow_method"]
+          sow_reference: Database["public"]["Enums"]["garden_sow_reference"]
+          sow_start_weeks: number
           updated_at?: string
         }
         Update: {
           created_at?: string
-          description?: string
-          due_date?: string | null
           id?: string
-          name?: string
-          status?: Database["public"]["Enums"]["project_status"]
+          notes?: string | null
+          seed_id?: string
+          sow_direction?: Database["public"]["Enums"]["garden_sow_direction"]
+          sow_end_weeks?: number
+          sow_method?: Database["public"]["Enums"]["garden_sow_method"]
+          sow_reference?: Database["public"]["Enums"]["garden_sow_reference"]
+          sow_start_weeks?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "garden_seed_sowing_windows_seed_id_fkey"
+            columns: ["seed_id"]
+            isOneToOne: false
+            referencedRelation: "garden_seeds"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      tasks: {
+      garden_seed_tasks: {
         Row: {
+          completed_at: string | null
           created_at: string
-          description: string
-          due_date: string | null
+          due_date: string
           id: string
-          name: string
-          project_id: string | null
-          repeating_interval: number | null
-          repeating_type: Database["public"]["Enums"]["repeating_type"] | null
-          status: Database["public"]["Enums"]["tasks_status"]
+          notes: string | null
+          seed_id: string
+          status: Database["public"]["Enums"]["garden_seed_task_status"]
+          title: string
           updated_at: string
         }
         Insert: {
+          completed_at?: string | null
           created_at?: string
-          description?: string
-          due_date?: string | null
+          due_date: string
           id?: string
-          name: string
-          project_id?: string | null
-          repeating_interval?: number | null
-          repeating_type?: Database["public"]["Enums"]["repeating_type"] | null
-          status?: Database["public"]["Enums"]["tasks_status"]
+          notes?: string | null
+          seed_id: string
+          status?: Database["public"]["Enums"]["garden_seed_task_status"]
+          title: string
           updated_at?: string
         }
         Update: {
+          completed_at?: string | null
           created_at?: string
-          description?: string
-          due_date?: string | null
+          due_date?: string
           id?: string
-          name?: string
-          project_id?: string | null
-          repeating_interval?: number | null
-          repeating_type?: Database["public"]["Enums"]["repeating_type"] | null
-          status?: Database["public"]["Enums"]["tasks_status"]
+          notes?: string | null
+          seed_id?: string
+          status?: Database["public"]["Enums"]["garden_seed_task_status"]
+          title?: string
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "tasks_project_id_fkey"
-            columns: ["project_id"]
+            foreignKeyName: "garden_seed_tasks_seed_id_fkey"
+            columns: ["seed_id"]
             isOneToOne: false
-            referencedRelation: "projects"
+            referencedRelation: "garden_seeds"
             referencedColumns: ["id"]
           },
         ]
       }
-      transactions: {
+      garden_seeds: {
         Row: {
-          account_id: string | null
-          amount: number
-          category_id: string | null
-          created_at: string | null
-          description: string
+          created_at: string
+          days_to_emerge: number | null
+          days_to_maturity: number | null
           id: string
-          memo: string | null
-          post_date: string
-          transaction_date: string
-          transaction_type: Database["public"]["Enums"]["transaction_type"]
-          updated_at: string | null
+          is_deer_resistant: boolean | null
+          is_succession_planted: boolean
+          location_number: string | null
+          notes: string | null
+          overall_rating: number | null
+          purchased_from: string | null
+          recommended_sow_method:
+            | Database["public"]["Enums"]["garden_sow_method"]
+            | null
+          row_spacing_inches: number | null
+          seed_depth_inches:
+            | Database["public"]["Enums"]["garden_seed_depth_inches"]
+            | null
+          source_image_url: string | null
+          source_page_url: string | null
+          succession_interval_days: number | null
+          sun_type: Database["public"]["Enums"]["garden_sun_type"]
+          type: string
+          updated_at: string
+          variety: string
         }
         Insert: {
-          account_id?: string | null
-          amount: number
-          category_id?: string | null
-          created_at?: string | null
-          description: string
+          created_at?: string
+          days_to_emerge?: number | null
+          days_to_maturity?: number | null
           id?: string
-          memo?: string | null
-          post_date: string
-          transaction_date: string
-          transaction_type: Database["public"]["Enums"]["transaction_type"]
-          updated_at?: string | null
+          is_deer_resistant?: boolean | null
+          is_succession_planted?: boolean
+          location_number?: string | null
+          notes?: string | null
+          overall_rating?: number | null
+          purchased_from?: string | null
+          recommended_sow_method?:
+            | Database["public"]["Enums"]["garden_sow_method"]
+            | null
+          row_spacing_inches?: number | null
+          seed_depth_inches?:
+            | Database["public"]["Enums"]["garden_seed_depth_inches"]
+            | null
+          source_image_url?: string | null
+          source_page_url?: string | null
+          succession_interval_days?: number | null
+          sun_type?: Database["public"]["Enums"]["garden_sun_type"]
+          type: string
+          updated_at?: string
+          variety: string
         }
         Update: {
-          account_id?: string | null
-          amount?: number
-          category_id?: string | null
-          created_at?: string | null
-          description?: string
+          created_at?: string
+          days_to_emerge?: number | null
+          days_to_maturity?: number | null
           id?: string
-          memo?: string | null
-          post_date?: string
-          transaction_date?: string
-          transaction_type?: Database["public"]["Enums"]["transaction_type"]
-          updated_at?: string | null
+          is_deer_resistant?: boolean | null
+          is_succession_planted?: boolean
+          location_number?: string | null
+          notes?: string | null
+          overall_rating?: number | null
+          purchased_from?: string | null
+          recommended_sow_method?:
+            | Database["public"]["Enums"]["garden_sow_method"]
+            | null
+          row_spacing_inches?: number | null
+          seed_depth_inches?:
+            | Database["public"]["Enums"]["garden_seed_depth_inches"]
+            | null
+          source_image_url?: string | null
+          source_page_url?: string | null
+          succession_interval_days?: number | null
+          sun_type?: Database["public"]["Enums"]["garden_sun_type"]
+          type?: string
+          updated_at?: string
+          variety?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "transactions_account_id_fkey"
-            columns: ["account_id"]
-            isOneToOne: false
-            referencedRelation: "accounts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transactions_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
@@ -213,34 +194,17 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      account_type:
-        | "checking"
-        | "savings"
-        | "credit_card"
-        | "investment"
-        | "loan"
-        | "other"
-      project_status:
-        | "not-started"
-        | "in-progress"
-        | "completed"
-        | "on-hold"
-        | "perpetual"
-      repeating_type: "day" | "week" | "month" | "quarter" | "annual"
-      tasks_status:
-        | "not-started"
-        | "in-progress"
-        | "completed"
-        | "on-hold"
-        | "repeating"
-        | "perpetual"
-      transaction_type:
-        | "sale"
-        | "payment"
-        | "transfer"
-        | "refund"
-        | "fee"
-        | "other"
+      garden_seed_task_status: "pending" | "completed" | "skipped" | "canceled"
+      garden_seed_depth_inches: "0" | "0.125" | "0.25" | "0.5" | "0.75" | "1"
+      garden_sow_direction: "before" | "after"
+      garden_sow_method: "inside" | "outside" | "either"
+      garden_sow_reference: "last_frost" | "first_frost"
+      garden_sun_type:
+        | "full_sun"
+        | "partial_sun"
+        | "partial_shade"
+        | "shade"
+        | "unknown"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -368,37 +332,17 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      account_type: [
-        "checking",
-        "savings",
-        "credit_card",
-        "investment",
-        "loan",
-        "other",
-      ],
-      project_status: [
-        "not-started",
-        "in-progress",
-        "completed",
-        "on-hold",
-        "perpetual",
-      ],
-      repeating_type: ["day", "week", "month", "quarter", "annual"],
-      tasks_status: [
-        "not-started",
-        "in-progress",
-        "completed",
-        "on-hold",
-        "repeating",
-        "perpetual",
-      ],
-      transaction_type: [
-        "sale",
-        "payment",
-        "transfer",
-        "refund",
-        "fee",
-        "other",
+      garden_seed_task_status: ["pending", "completed", "skipped", "canceled"],
+      garden_seed_depth_inches: ["0", "0.125", "0.25", "0.5", "0.75", "1"],
+      garden_sow_direction: ["before", "after"],
+      garden_sow_method: ["inside", "outside", "either"],
+      garden_sow_reference: ["last_frost", "first_frost"],
+      garden_sun_type: [
+        "full_sun",
+        "partial_sun",
+        "partial_shade",
+        "shade",
+        "unknown",
       ],
     },
   },
