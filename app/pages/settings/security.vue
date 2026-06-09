@@ -3,7 +3,7 @@ const fields = [
   { key: 'control', label: 'Control', required: true },
   { key: 'status', label: 'Status', type: 'select', options: [{ label: 'Planned', value: 'planned' }, { label: 'In Progress', value: 'in_progress' }, { label: 'Active', value: 'active' }, { label: 'Deferred', value: 'deferred' }] },
   { key: 'area', label: 'Area', type: 'select', options: [{ label: 'Hosting', value: 'hosting' }, { label: 'Auth', value: 'auth' }, { label: 'Data', value: 'data' }, { label: 'Exports', value: 'exports' }] },
-  { key: 'notes', label: 'Notes', type: 'textarea' }
+  { key: 'notes', label: 'Notes', type: 'textarea', table: false }
 ] as const
 </script>
 

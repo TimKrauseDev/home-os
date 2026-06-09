@@ -4,7 +4,7 @@ const fields = [
   { key: 'title', label: 'Todo', required: true },
   { key: 'status', label: 'Status', type: 'select', options: [{ label: 'Pending', value: 'pending' }, { label: 'In Progress', value: 'in_progress' }, { label: 'Completed', value: 'completed' }, { label: 'Skipped', value: 'skipped' }, { label: 'Canceled', value: 'canceled' }] },
   { key: 'due_date', label: 'Due', type: 'date' },
-  { key: 'notes', label: 'Notes', type: 'textarea' }
+  { key: 'notes', label: 'Notes', type: 'textarea', table: false }
 ] as const
 </script>
 
@@ -15,7 +15,6 @@ const fields = [
     icon="i-lucide-list-todo"
     add-label="Add Todo"
     empty-label="No project todos yet."
-    :actions="[{ label: 'Projects', icon: 'i-lucide-folder-kanban', to: '/home-improvement/projects' }]"
     :fields="fields"
     table-name="home_improvement_todos"
     :order-by="{ column: 'due_date', ascending: true }"

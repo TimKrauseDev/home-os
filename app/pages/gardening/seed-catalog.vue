@@ -331,52 +331,72 @@ const handleSeedSaved = () => {
             class="grid cursor-pointer list-none grid-cols-[1fr_auto] gap-3 p-4 transition hover:bg-muted/40 [&::-webkit-details-marker]:hidden"
           >
             <div class="grid min-w-0 gap-2 sm:grid-cols-[7rem_8rem_minmax(0,1fr)] sm:items-center">
-              <span class="text-sm text-muted">
-                {{ seed.location_number ?? 'No location' }}
-              </span>
-              <span class="capitalize text-sm text-muted">
-                {{ seed.type }}
-              </span>
-              <div
-                class="flex min-w-0 flex-wrap items-center gap-1.5"
-              >
-                <span class="font-medium">
-                  {{ seed.variety }}
-                </span>
-                <UBadge
-                  v-for="feature in seedFeatureDefinitions.filter(feature => feature.matches(seed))"
-                  :key=" feature.value "
-                  :icon=" feature.icon "
-                  :color=" feature.color "
-                  variant="subtle"
-                  size="sm"
-                  :aria-label=" feature.label "
-                  :title=" feature.label "
-                  square
-                />
+              <div class="min-w-0">
+                <p class="text-xs text-muted">
+                  Location
+                </p>
+                <p class="truncate text-sm text-highlighted">
+                  {{ seed.location_number ?? 'No location' }}
+                </p>
+              </div>
+              <div class="min-w-0">
+                <p class="text-xs text-muted">
+                  Type
+                </p>
+                <p class="truncate text-sm capitalize text-highlighted">
+                  {{ seed.type }}
+                </p>
+              </div>
+              <div class="min-w-0">
+                <p class="text-xs text-muted">
+                  Variety
+                </p>
+                <div
+                  class="flex min-w-0 flex-wrap items-center gap-1.5"
+                >
+                  <span class="truncate font-medium">
+                    {{ seed.variety }}
+                  </span>
+                  <UBadge
+                    v-for="feature in seedFeatureDefinitions.filter(feature => feature.matches(seed))"
+                    :key=" feature.value "
+                    :icon=" feature.icon "
+                    :color=" feature.color "
+                    variant="subtle"
+                    size="sm"
+                    :aria-label=" feature.label "
+                    :title=" feature.label "
+                    square
+                  />
+                </div>
               </div>
             </div>
 
             <div class="flex items-center gap-3">
-              <div
-                v-if="seed.overall_rating"
-                class="flex items-center gap-0.5"
-                :aria-label=" `${seed.overall_rating} out of 5 stars` "
-              >
-                <UIcon
-                  v-for="ratingIndex in 5"
-                  :key=" ratingIndex "
-                  name="i-lucide-star"
-                  class="size-4"
-                  :class=" ratingIndex <= seed.overall_rating ? 'fill-warning text-warning' : 'text-muted' "
-                />
+              <div>
+                <p class="text-xs text-muted">
+                  Rating
+                </p>
+                <div
+                  v-if="seed.overall_rating"
+                  class="flex items-center gap-0.5"
+                  :aria-label=" `${seed.overall_rating} out of 5 stars` "
+                >
+                  <UIcon
+                    v-for="ratingIndex in 5"
+                    :key=" ratingIndex "
+                    name="i-lucide-star"
+                    class="size-4"
+                    :class=" ratingIndex <= seed.overall_rating ? 'fill-warning text-warning' : 'text-muted' "
+                  />
+                </div>
+                <span
+                  v-else
+                  class="text-sm text-muted"
+                >
+                  No rating
+                </span>
               </div>
-              <span
-                v-else
-                class="text-sm text-muted"
-              >
-                No rating
-              </span>
 
               <UIcon
                 name="i-lucide-chevron-down"

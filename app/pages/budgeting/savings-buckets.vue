@@ -4,7 +4,7 @@ const fields = [
   { key: 'owner', label: 'Owner', type: 'select', options: [{ label: 'Self', value: 'self' }, { label: 'Spouse', value: 'spouse' }, { label: 'Joint', value: 'joint' }, { label: 'Household', value: 'household' }] },
   { key: 'target_amount', label: 'Target', type: 'number' },
   { key: 'current_amount', label: 'Current', type: 'number' },
-  { key: 'status', label: 'Status', type: 'select', options: [{ label: 'Active', value: 'active' }, { label: 'Paused', value: 'paused' }, { label: 'Completed', value: 'completed' }, { label: 'Archived', value: 'archived' }] },
+  { key: 'status', label: 'Status', type: 'select', table: false, options: [{ label: 'Active', value: 'active' }, { label: 'Paused', value: 'paused' }, { label: 'Completed', value: 'completed' }, { label: 'Archived', value: 'archived' }] },
   { key: 'notes', label: 'Notes', type: 'textarea', table: false }
 ] as const
 </script>

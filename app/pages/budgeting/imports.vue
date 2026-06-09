@@ -5,8 +5,8 @@ const fields = [
   { key: 'institution', label: 'Institution' },
   { key: 'imported_at', label: 'Imported', type: 'date' },
   { key: 'row_count', label: 'Rows', type: 'number' },
-  { key: 'created_count', label: 'Created', type: 'number' },
-  { key: 'skipped_count', label: 'Skipped', type: 'number' },
+  { key: 'created_count', label: 'Created', type: 'number', table: false },
+  { key: 'skipped_count', label: 'Skipped', type: 'number', table: false },
   { key: 'notes', label: 'Notes', type: 'textarea', table: false }
 ] as const
 </script>
@@ -18,7 +18,6 @@ const fields = [
     icon="i-lucide-upload"
     add-label="Add Import Batch"
     empty-label="No import batches yet."
-    :actions="[{ label: 'Transactions', icon: 'i-lucide-receipt-text', to: '/budgeting/transactions' }]"
     :fields="fields"
     table-name="budget_transaction_imports"
     :order-by="{ column: 'imported_at', ascending: false }"

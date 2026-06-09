@@ -237,6 +237,14 @@ export const useEditableRecords = (config: EditableRecordConfig) => {
 
   const formatFieldValue = (value: unknown, field: DomainTableField) => {
     const option = field.options?.find(item => item.value === value)
+    const shouldFormatDate = field.type === 'date' || field.key.endsWith('_at') || field.key.endsWith('_date')
+
+    if (shouldFormatDate && typeof value === 'string' && value) {
+      return new Intl.DateTimeFormat('en-US', {
+        dateStyle: 'medium',
+        timeStyle: value.includes('T') ? 'short' : undefined
+      }).format(new Date(value))
+    }
 
     return option?.label ?? formatLabel(value)
   }

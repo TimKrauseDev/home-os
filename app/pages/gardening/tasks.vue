@@ -349,16 +349,6 @@ const updateTaskStatus = async (task: TaskRow, status: TaskStatus) => {
             />
             Add Task
           </button>
-          <NuxtLink
-            to="/gardening/seed-catalog"
-            class="inline-flex h-9 items-center gap-2 rounded-md border border-default px-3 text-sm font-medium text-highlighted transition hover:bg-muted"
-          >
-            <UIcon
-              name="i-lucide-table-properties"
-              class="size-4"
-            />
-            Seed Catalog
-          </NuxtLink>
           <button
             type="button"
             class="inline-flex h-9 items-center gap-2 rounded-md border border-default px-3 text-sm font-medium text-highlighted transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"

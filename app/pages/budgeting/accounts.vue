@@ -5,8 +5,8 @@ const fields = [
   { key: 'account_type', label: 'Type', type: 'select', options: [{ label: 'Checking', value: 'checking' }, { label: 'Savings', value: 'savings' }, { label: 'Credit Card', value: 'credit_card' }, { label: 'Investment', value: 'investment' }, { label: 'Cash', value: 'cash' }, { label: 'Other', value: 'other' }] },
   { key: 'institution', label: 'Institution' },
   { key: 'current_balance', label: 'Balance', type: 'number' },
-  { key: 'available_balance', label: 'Available', type: 'number' },
-  { key: 'is_active', label: 'Active', type: 'checkbox' },
+  { key: 'available_balance', label: 'Available', type: 'number', table: false },
+  { key: 'is_active', label: 'Active', type: 'checkbox', table: false },
   { key: 'notes', label: 'Notes', type: 'textarea', table: false }
 ] as const
 </script>
@@ -18,7 +18,6 @@ const fields = [
     icon="i-lucide-landmark"
     add-label="Add Account"
     empty-label="No accounts yet."
-    :actions="[{ label: 'Transactions', icon: 'i-lucide-receipt-text', to: '/budgeting/transactions' }]"
     :fields="fields"
     table-name="budget_accounts"
     :order-by="{ column: 'name', ascending: true }"

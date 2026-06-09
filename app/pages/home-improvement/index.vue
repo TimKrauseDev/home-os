@@ -15,7 +15,6 @@ const fields = [
     icon="i-lucide-hammer"
     add-label="Add Project Signal"
     empty-label="No improvement projects yet."
-    :actions="[{ label: 'Projects', icon: 'i-lucide-folder-kanban', to: '/home-improvement/projects' }, { label: 'Todos', icon: 'i-lucide-list-todo', to: '/home-improvement/todos' }]"
     :fields="fields"
     table-name="home_improvement_projects"
     :order-by="{ column: 'target_end_date', ascending: true }"

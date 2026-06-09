@@ -3,7 +3,7 @@ const fields = [
   { key: 'task_id', label: 'Task', type: 'select', required: true, optionSource: { tableName: 'home_maintenance_tasks', labelColumn: 'title' } },
   { key: 'completed_at', label: 'Completed', type: 'date' },
   { key: 'completed_by', label: 'Completed By' },
-  { key: 'notes', label: 'Notes', type: 'textarea' }
+  { key: 'notes', label: 'Notes', type: 'textarea', table: false }
 ] as const
 </script>
 
@@ -14,7 +14,6 @@ const fields = [
     icon="i-lucide-history"
     add-label="Add Completion"
     empty-label="No maintenance completions yet."
-    :actions="[{ label: 'Tasks', icon: 'i-lucide-list-checks', to: '/home-maintenance/tasks' }]"
     :fields="fields"
     table-name="home_maintenance_completions"
     :order-by="{ column: 'completed_at', ascending: false }"

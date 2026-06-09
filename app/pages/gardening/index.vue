@@ -129,18 +129,6 @@ const recommendedSowingSeeds = computed(() => {
       <template #footer>
         <div class="flex flex-wrap gap-2">
           <UButton
-            label="Seed Catalog"
-            icon="i-lucide-table-properties"
-            to="/gardening/seed-catalog"
-          />
-          <UButton
-            label="Planting Tasks"
-            icon="i-lucide-list-todo"
-            to="/gardening/tasks"
-            color="neutral"
-            variant="outline"
-          />
-          <UButton
             label="Refresh"
             icon="i-lucide-refresh-cw"
             color="neutral"
@@ -234,15 +222,6 @@ const recommendedSowingSeeds = computed(() => {
                   </span>
                 </p>
               </div>
-              <UButton
-                label="Open"
-                icon="i-lucide-arrow-right"
-                color="neutral"
-                variant="outline"
-                size="sm"
-                to="/gardening/tasks"
-                class="self-start"
-              />
             </article>
           </div>
         </UPageCard>

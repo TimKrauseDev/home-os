@@ -4,7 +4,7 @@ const fields = [
   { key: 'domain', label: 'Domain', type: 'select', options: [{ label: 'Budgeting', value: 'budgeting' }] },
   { key: 'status', label: 'Status', type: 'select', options: [{ label: 'Needs Review', value: 'needs_review' }, { label: 'Action Needed', value: 'action_needed' }, { label: 'Good', value: 'good' }, { label: 'Upcoming', value: 'upcoming' }] },
   { key: 'due_date', label: 'Due', type: 'date' },
-  { key: 'notes', label: 'Notes', type: 'textarea' }
+  { key: 'notes', label: 'Notes', type: 'textarea', table: false }
 ] as const
 </script>
 
@@ -15,7 +15,6 @@ const fields = [
     icon="i-lucide-wallet"
     add-label="Add Budget Signal"
     empty-label="No budget signals yet."
-    :actions="[{ label: 'Accounts', icon: 'i-lucide-landmark', to: '/budgeting/accounts' }, { label: 'Transactions', icon: 'i-lucide-receipt-text', to: '/budgeting/transactions' }, { label: 'Settle Up', icon: 'i-lucide-hand-coins', to: '/budgeting/settlements' }]"
     :fields="fields"
     :filters="[{ column: 'domain', value: 'budgeting' }]"
     table-name="dashboard_attention_items"

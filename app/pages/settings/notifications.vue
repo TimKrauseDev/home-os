@@ -4,7 +4,7 @@ const fields = [
   { key: 'channel', label: 'Channel', type: 'select', options: [{ label: 'Email', value: 'email' }, { label: 'ntfy', value: 'ntfy' }, { label: 'SMS', value: 'sms' }] },
   { key: 'timing', label: 'Timing' },
   { key: 'enabled', label: 'Enabled', type: 'checkbox' },
-  { key: 'notes', label: 'Notes', type: 'textarea' }
+  { key: 'notes', label: 'Notes', type: 'textarea', table: false }
 ] as const
 </script>
 

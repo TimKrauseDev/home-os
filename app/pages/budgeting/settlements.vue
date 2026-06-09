@@ -3,7 +3,7 @@ const fields = [
   { key: 'title', label: 'Task', required: true },
   { key: 'payer', label: 'Payer', required: true },
   { key: 'recipient', label: 'Recipient', required: true },
-  { key: 'source_type', label: 'Source', type: 'select', options: [{ label: 'Bill Split', value: 'bill_split' }, { label: 'Balance Difference', value: 'balance_difference' }, { label: 'Purchase Share', value: 'purchase_share' }, { label: 'Manual', value: 'manual' }, { label: 'Other', value: 'other' }] },
+  { key: 'source_type', label: 'Source', type: 'select', table: false, options: [{ label: 'Bill Split', value: 'bill_split' }, { label: 'Balance Difference', value: 'balance_difference' }, { label: 'Purchase Share', value: 'purchase_share' }, { label: 'Manual', value: 'manual' }, { label: 'Other', value: 'other' }] },
   { key: 'amount_due', label: 'Amount Due', type: 'number' },
   { key: 'due_date', label: 'Due', type: 'date' },
   { key: 'status', label: 'Status', type: 'select', options: [{ label: 'Pending', value: 'pending' }, { label: 'Completed', value: 'completed' }, { label: 'Canceled', value: 'canceled' }, { label: 'Skipped', value: 'skipped' }] },
@@ -18,7 +18,6 @@ const fields = [
     icon="i-lucide-hand-coins"
     add-label="Add Settlement"
     empty-label="No settlement tasks yet."
-    :actions="[{ label: 'Transactions', icon: 'i-lucide-receipt-text', to: '/budgeting/transactions' }]"
     :fields="fields"
     table-name="budget_settlement_tasks"
     :order-by="{ column: 'due_date', ascending: true }"

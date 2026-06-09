@@ -5,7 +5,7 @@ const fields = [
   { key: 'priority', label: 'Priority', type: 'select', options: [{ label: 'Low', value: 'low' }, { label: 'Medium', value: 'medium' }, { label: 'High', value: 'high' }] },
   { key: 'area', label: 'Area' },
   { key: 'estimated_total', label: 'Estimated', type: 'number' },
-  { key: 'actual_total', label: 'Actual', type: 'number' },
+  { key: 'actual_total', label: 'Actual', type: 'number', table: false },
   { key: 'target_end_date', label: 'Target End', type: 'date' },
   { key: 'notes', label: 'Notes', type: 'textarea', table: false }
 ] as const
@@ -18,7 +18,6 @@ const fields = [
     icon="i-lucide-folder-kanban"
     add-label="Add Project"
     empty-label="No projects yet."
-    :actions="[{ label: 'Todos', icon: 'i-lucide-list-todo', to: '/home-improvement/todos' }]"
     :fields="fields"
     table-name="home_improvement_projects"
     :order-by="{ column: 'target_end_date', ascending: true }"

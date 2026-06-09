@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { DomainPageAction, DomainStatCard, DomainTableField, DomainTableFilter, DomainTableOrder, DomainTableRecord } from '~/types/domain-table'
+import type { DomainStatCard, DomainTableField, DomainTableFilter, DomainTableOrder, DomainTableRecord } from '~/types/domain-table'
 
 const props = defineProps<{
   title: string
@@ -10,7 +10,6 @@ const props = defineProps<{
   fields: readonly DomainTableField[]
   filters?: readonly DomainTableFilter[]
   initialRecords?: readonly DomainTableRecord[]
-  actions?: DomainPageAction[]
   orderBy?: DomainTableOrder
   stats?: DomainStatCard[]
   tableName?: string
@@ -19,6 +18,7 @@ const props = defineProps<{
 const {
   closeModal,
   fields: hydratedFields,
+  fetchRecords,
   form,
   formatFieldValue,
   isOpen,
@@ -31,6 +31,70 @@ const {
   saveRecord,
   tableFields
 } = useEditableRecords(props)
+
+const allFilterValue = 'all'
+const pageSizeItems = [10, 25, 50].map(size => ({
+  label: `${size} per page`,
+  value: size
+}))
+const search = ref('')
+const activeFilters = reactive<Record<string, string>>({})
+const selectedPageSize = ref(10)
+const page = ref(1)
+const filterFields = computed(() => hydratedFields.value.filter(field => field.options?.length))
+const summaryFields = computed(() => tableFields.value.slice(0, 4))
+const primaryField = computed(() => summaryFields.value[0])
+const detailFields = computed(() => {
+  const summaryKeys = new Set(summaryFields.value.map(field => field.key))
+
+  return hydratedFields.value.filter(field => !summaryKeys.has(field.key))
+})
+const expandedRecordId = ref<string | null>(null)
+
+watch(filterFields, (fields) => {
+  for (const field of fields) {
+    activeFilters[field.key] ??= allFilterValue
+  }
+}, { immediate: true })
+
+const filteredRecords = computed(() => {
+  const query = search.value.trim().toLowerCase()
+
+  return records.value.filter((record) => {
+    const matchesSearch = !query || hydratedFields.value.some((field) => {
+      const value = formatFieldValue(record[field.key], field)
+
+      return value.toLowerCase().includes(query)
+    })
+    const matchesFilters = filterFields.value.every((field) => {
+      const filterValue = activeFilters[field.key] ?? allFilterValue
+
+      return filterValue === allFilterValue || String(record[field.key] ?? '') === filterValue
+    })
+
+    return matchesSearch && matchesFilters
+  })
+})
+const visibleRecords = computed(() => {
+  const startIndex = (page.value - 1) * selectedPageSize.value
+
+  return filteredRecords.value.slice(startIndex, startIndex + selectedPageSize.value)
+})
+const resultCount = computed(() => filteredRecords.value.length)
+const resultStart = computed(() => {
+  if (!resultCount.value) return 0
+
+  return (page.value - 1) * selectedPageSize.value + 1
+})
+const resultEnd = computed(() => Math.min(page.value * selectedPageSize.value, resultCount.value))
+
+watch([search, selectedPageSize], () => {
+  page.value = 1
+})
+
+watch(activeFilters, () => {
+  page.value = 1
+})
 </script>
 
 <template>
@@ -58,14 +122,13 @@ const {
             @click="openCreateModal"
           />
           <UButton
-            v-for="action in actions"
-            :key="action.label"
-            :label="action.label"
-            :icon="action.icon"
-            :to="action.to"
+            label="Refresh"
+            icon="i-lucide-refresh-cw"
             color="neutral"
             variant="outline"
             class="w-fit"
+            :loading="isLoading"
+            @click="fetchRecords"
           />
         </div>
       </div>
@@ -164,57 +227,145 @@ const {
       </div>
     </div>
 
-    <section class="overflow-hidden rounded-lg border border-default bg-default shadow-xs">
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-default text-sm">
-          <thead class="bg-muted/40 text-left text-xs uppercase text-muted">
-            <tr>
-              <th
-                v-for="field in tableFields"
-                :key="field.key"
-                class="px-4 py-3 font-medium"
-              >
-                {{ field.label }}
-              </th>
-              <th class="px-4 py-3 text-right font-medium">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-default">
-            <tr v-if="!records.length">
-              <td :colspan="tableFields.length + 1" class="px-4 py-6 text-muted">
-                {{ isLoading ? 'Loading...' : emptyLabel }}
-              </td>
-            </tr>
-            <tr
-              v-for="record in records"
-              v-else
-              :key="record.id"
-              class="align-top"
-            >
-              <td
-                v-for="field in tableFields"
-                :key="field.key"
-                class="px-4 py-3"
-              >
-                {{ formatFieldValue(record[field.key], field) }}
-              </td>
-              <td class="px-4 py-3 text-right">
-                <UButton
-                  label="Edit"
-                  icon="i-lucide-pencil"
-                  color="neutral"
-                  variant="outline"
-                  size="sm"
-                  class="w-fit"
-                  @click="openEditModal(record)"
-                />
-              </td>
-            </tr>
-          </tbody>
-        </table>
+    <UPageCard
+      variant="subtle"
+      :ui="{ container: 'p-0 sm:p-0 overflow-hidden' }"
+    >
+      <div class="grid gap-3 border-b border-default p-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_repeat(3,11rem)_10rem]">
+        <UInput
+          v-model="search"
+          icon="i-lucide-search"
+          placeholder="Search table"
+        />
+
+        <USelect
+          v-for="field in filterFields"
+          :key="field.key"
+          v-model="activeFilters[field.key]"
+          :items="[
+            { label: `All ${field.label.toLowerCase()}`, value: allFilterValue },
+            ...(field.options ?? [])
+          ]"
+          :aria-label="`Filter by ${field.label}`"
+        />
+
+        <USelect
+          v-model="selectedPageSize"
+          :items="pageSizeItems"
+        />
       </div>
-    </section>
+
+      <div class="divide-y divide-default">
+        <div
+          v-if="isLoading"
+          class="p-4 text-sm text-muted"
+        >
+          Loading...
+        </div>
+
+        <div
+          v-else-if="!resultCount"
+          class="p-4 text-sm text-muted"
+        >
+          {{ emptyLabel }}
+        </div>
+
+        <article
+          v-for="record in visibleRecords"
+          v-else
+          :key="record.id"
+          class="group"
+        >
+          <button
+            type="button"
+            class="grid w-full cursor-pointer list-none grid-cols-[1fr_auto] gap-3 p-4 text-left transition hover:bg-muted/40"
+            @click="expandedRecordId = expandedRecordId === record.id ? null : record.id"
+          >
+            <div class="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_repeat(3,minmax(7rem,10rem))] sm:items-center">
+              <div class="min-w-0">
+                <p class="truncate font-medium">
+                  {{ primaryField ? formatFieldValue(record[primaryField.key], primaryField) : record.id }}
+                </p>
+                <p class="mt-1 text-xs text-muted sm:hidden">
+                  Tap to view details
+                </p>
+              </div>
+
+              <div
+                v-for="field in summaryFields.slice(1)"
+                :key="field.key"
+                class="hidden min-w-0 sm:block"
+              >
+                <p class="text-xs text-muted">
+                  {{ field.label }}
+                </p>
+                <p class="truncate text-sm text-highlighted">
+                  {{ formatFieldValue(record[field.key], field) }}
+                </p>
+              </div>
+            </div>
+
+            <UIcon
+              name="i-lucide-chevron-down"
+              class="size-4 text-muted transition-transform"
+              :class="{ 'rotate-180': expandedRecordId === record.id }"
+            />
+          </button>
+
+          <div
+            v-if="expandedRecordId === record.id"
+            class="flex flex-col gap-4 border-t border-default px-4 py-4"
+          >
+            <dl
+              v-if="detailFields.length"
+              class="grid gap-3 text-sm sm:grid-cols-2 xl:grid-cols-4"
+            >
+              <div
+                v-for="field in detailFields"
+                :key="field.key"
+                class="min-w-0"
+              >
+                <dt class="text-sm text-muted">
+                  {{ field.label }}
+                </dt>
+                <dd class="mt-1 whitespace-pre-wrap text-highlighted">
+                  {{ formatFieldValue(record[field.key], field) }}
+                </dd>
+              </div>
+            </dl>
+
+            <div class="flex flex-wrap justify-end gap-2 border-t border-default pt-4">
+              <UButton
+                label="Edit"
+                icon="i-lucide-pencil"
+                color="neutral"
+                variant="outline"
+                size="sm"
+                class="w-fit"
+                @click="openEditModal(record)"
+              />
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div
+        v-if="resultCount"
+        class="flex flex-col gap-3 border-t border-default p-4 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <p class="text-sm text-muted">
+          Showing {{ resultStart }}-{{ resultEnd }} of {{ resultCount }} rows
+        </p>
+
+        <UPagination
+          v-model:page="page"
+          :total="resultCount"
+          :items-per-page="selectedPageSize"
+          :sibling-count="1"
+          size="sm"
+          class="self-start sm:self-auto"
+        />
+      </div>
+    </UPageCard>
   </div>
 </template>

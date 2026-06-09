@@ -29,12 +29,6 @@ export type DomainStatCard = {
   icon: string
 }
 
-export type DomainPageAction = {
-  label: string
-  icon: string
-  to?: string
-}
-
 export type DomainTableOrder = {
   column: string
   ascending?: boolean

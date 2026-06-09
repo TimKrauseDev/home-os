@@ -4,7 +4,7 @@ const fields = [
   { key: 'domain', label: 'Domain', type: 'select', options: [{ label: 'Gardening', value: 'gardening' }, { label: 'Maintenance', value: 'maintenance' }, { label: 'Improvements', value: 'improvements' }, { label: 'Budgeting', value: 'budgeting' }] },
   { key: 'status', label: 'Status', type: 'select', options: [{ label: 'Due Soon', value: 'due_soon' }, { label: 'Blocked', value: 'blocked' }, { label: 'Needs Review', value: 'needs_review' }, { label: 'Upcoming', value: 'upcoming' }] },
   { key: 'due_date', label: 'Due', type: 'date' },
-  { key: 'notes', label: 'Notes', type: 'textarea' }
+  { key: 'notes', label: 'Notes', type: 'textarea', table: false }
 ] as const
 </script>
 
@@ -26,7 +26,6 @@ const fields = [
           icon="i-lucide-house"
           add-label="Add Attention Item"
           empty-label="Nothing needs attention right now."
-          :actions="[{ label: 'Gardening', icon: 'i-lucide-sprout', to: '/gardening' }, { label: 'Maintenance', icon: 'i-lucide-wrench', to: '/home-maintenance' }, { label: 'Improvements', icon: 'i-lucide-hammer', to: '/home-improvement' }, { label: 'Budgeting', icon: 'i-lucide-wallet', to: '/budgeting' }]"
           :fields="fields"
           table-name="dashboard_attention_items"
           :order-by="{ column: 'due_date', ascending: true }"

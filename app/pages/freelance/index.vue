@@ -3,7 +3,7 @@ const fields = [
   { key: 'workflow', label: 'Possible Workflow', required: true },
   { key: 'status', label: 'Status', type: 'select', options: [{ label: 'Reserved', value: 'reserved' }, { label: 'Future', value: 'future' }, { label: 'Deferred', value: 'deferred' }] },
   { key: 'priority', label: 'Priority', type: 'select', options: [{ label: 'Low', value: 'low' }, { label: 'Medium', value: 'medium' }, { label: 'High', value: 'high' }] },
-  { key: 'notes', label: 'Notes', type: 'textarea' }
+  { key: 'notes', label: 'Notes', type: 'textarea', table: false }
 ] as const
 </script>
 
