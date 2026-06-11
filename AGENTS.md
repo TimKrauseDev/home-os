@@ -23,13 +23,13 @@ Keep product intent, architecture notes, setup commands, and active decisions he
 
 ## Skills
 
-Always use the following skills. The name and description of the skill can be found each of the files.
+Use relevant local skills from `.agents/skills/` when the task matches:
 
-- `.agents/skill/nuxt/SKILL.md`
-- `.agents/skill/nuxt-ui/SKILL.md`
-- `.agents/skill/supabase/SKILL.md`
-- `.agents/skill/supabase-postgres-best-practices/SKILL.md`
-
+- `grill-me`: only when planning, stress-testing, or explicitly asked to grill the design.
+- `nuxt`: Nuxt routes, layouts, server APIs, middleware, plugins, config, and Nuxt composables.
+- `nuxt-ui`: UI work, dashboards, forms, data tables, overlays, navigation, and design-system decisions.
+- `supabase`: Supabase client, Auth, Storage, CLI, migrations, RLS, Edge Functions, and schema work.
+- `supabase-postgres-best-practices`: SQL, schema design, indexes, RLS performance, and Postgres reviews.
 
 ## Project Notes
 
