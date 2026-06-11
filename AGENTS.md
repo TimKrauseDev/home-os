@@ -30,6 +30,9 @@ Use relevant local skills from `.agents/skills/` when the task matches:
 - `nuxt-ui`: UI work, dashboards, forms, data tables, overlays, navigation, and design-system decisions.
 - `supabase`: Supabase client, Auth, Storage, CLI, migrations, RLS, Edge Functions, and schema work.
 - `supabase-postgres-best-practices`: SQL, schema design, indexes, RLS performance, and Postgres reviews.
+- `typescript-advanced-types`: TypeScript typing, narrowing, generics, utility types, Vue/Nuxt type patterns, and avoiding unsafe casts.
+
+Do not load every skill file by default. Load only the skill and reference files relevant to the current task.
 
 ## Project Notes
 
