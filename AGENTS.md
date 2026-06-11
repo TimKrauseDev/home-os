@@ -3,7 +3,7 @@
 This file is the durable project memory for coding agents working in this repository.
 Read it at the start of each session before making changes.
 
-For product and architecture context, also read `PROJECT.md`.
+For product and architecture context, also read `docs/PROJECT.md`.
 
 ## Project
 
@@ -20,6 +20,16 @@ Keep product intent, architecture notes, setup commands, and active decisions he
 - Use `rg` or `rg --files` for searching when available.
 - Use `apply_patch` for manual file edits.
 - Run relevant tests or checks when practical, and report any that could not be run.
+
+## Skills
+
+Always use the following skills. The name and description of the skill can be found each of the files.
+
+- `.agents/skill/nuxt/SKILL.md`
+- `.agents/skill/nuxt-ui/SKILL.md`
+- `.agents/skill/supabase/SKILL.md`
+- `.agents/skill/supabase-postgres-best-practices/SKILL.md`
+
 
 ## Project Notes
 
