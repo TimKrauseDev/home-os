@@ -13,6 +13,11 @@ const links = [[{
   to: '/',
   onSelect: closeSidebar
 }, {
+  label: 'Todo',
+  icon: 'i-lucide-list-todo',
+  to: '/todo',
+  onSelect: closeSidebar
+}, {
   label: 'Gardening',
   to: '/gardening',
   icon: 'i-lucide-sprout',
@@ -157,34 +162,32 @@ const groups = computed(() => [{
   <UDashboardGroup unit="rem">
     <UDashboardSidebar
       id="default"
-      v-model:open="open"
+      v-model:open=" open "
       collapsible
       resizable
       class="bg-elevated/25"
-      :ui="{ footer: 'lg:border-t lg:border-default' }"
-    >
+      :ui=" { footer: 'lg:border-t lg:border-default' } ">
       <template #header>
         <HeaderLogo />
       </template>
 
       <template #default="{ collapsed }">
-        <UDashboardSearchButton :collapsed="collapsed" class="bg-transparent ring-default" />
+        <UDashboardSearchButton :collapsed=" collapsed " class="bg-transparent ring-default" />
 
         <UNavigationMenu
-          :collapsed="collapsed"
-          :items="links[0]"
+          :collapsed=" collapsed "
+          :items=" links[0] "
           orientation="vertical"
           tooltip
-          popover
-        />
+          popover />
       </template>
 
       <template #footer="{ collapsed }">
-        <UserMenu :collapsed="collapsed" />
+        <UserMenu :collapsed=" collapsed " />
       </template>
     </UDashboardSidebar>
 
-    <UDashboardSearch :groups="groups" />
+    <UDashboardSearch :groups=" groups " />
 
     <slot />
   </UDashboardGroup>
