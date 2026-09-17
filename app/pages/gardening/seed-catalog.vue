@@ -1,39 +1,22 @@
 <script setup lang="ts">
-import type { Tables } from '../../../database/database.types'
-import { createSupabaseClient } from '~/libs/supabaseClient'
-
-type GardenSeed = Tables<'garden_seeds'>
-type SowingWindow = Tables<'garden_seed_sowing_windows'>
-type SeedCatalogRow = GardenSeed & {
-  garden_seed_sowing_windows: SowingWindow[]
-}
-
-const allFilterValue = 'all'
-const pageSizeItems = [10, 25, 50].map(size => ({
-  label: `${size} per page`,
-  value: size
-}))
-const seedFeatureDefinitions = [
-  {
-    label: 'Deer resistant',
-    value: 'deer_resistant',
-    icon: 'i-lucide-shield-check',
-    color: 'neutral',
-    matches: (seed: GardenSeed) => seed.is_deer_resistant === true
-  },
-  {
-    label: 'Succession planted',
-    value: 'succession_planted',
-    icon: 'i-lucide-repeat',
-    color: 'primary',
-    matches: (seed: GardenSeed) => seed.is_succession_planted
-  }
-] as const
+import type { SeedCatalogRow, SowMethod } from '~/types/gardening'
+import {
+  formatSeedDepth,
+  formatSowingWindowTiming,
+  isRecommendedSowingWindow
+} from '~/utils/gardening'
+import { formatBoolean, formatInches, formatLabel } from '~/utils/formatters'
+import { allFilterValue, pageSizeItems } from '~/utils/options/common'
+import {
+  seedFeatureDefinitions,
+  seedFeatureFilterItems,
+  sowMethodFilterItems
+} from '~/utils/options/gardening'
 
 const search = ref('')
 const selectedType = ref(allFilterValue)
-const selectedSowMethod = ref(allFilterValue)
-const selectedFeature = ref(allFilterValue)
+const selectedSowMethod = ref<SowMethod | typeof allFilterValue>(allFilterValue)
+const selectedFeature = ref<(typeof seedFeatureDefinitions)[number]['value'] | typeof allFilterValue>(allFilterValue)
 const selectedPageSize = ref(10)
 const page = ref(1)
 const isOpen = ref(false)
@@ -44,72 +27,7 @@ const modalDescription = computed(() => selectedSeed.value
   ? 'Update this seed catalog entry and its frost-relative sowing windows.'
   : 'Add a seed catalog entry and optional frost-relative sowing windows.')
 
-const formatLabel = (value: string | null | undefined) => {
-  if (!value) return '-'
-
-  return value
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, letter => letter.toUpperCase())
-}
-
-const formatDepth = (value: number | string | null) => {
-  if (value === null) return '-'
-
-  const depth = String(value)
-  const depthLabels = new Map([
-    ['0', 'Surface'],
-    ['0.125', '1/8 in'],
-    ['0.25', '1/4 in'],
-    ['0.5', '1/2 in'],
-    ['0.75', '3/4 in'],
-    ['1', '1 in']
-  ])
-
-  return depthLabels.get(depth) ?? `${depth} in`
-}
-
-const formatBoolean = (value: boolean | null) => {
-  if (value === null) return '-'
-
-  return value ? 'Yes' : 'No'
-}
-
-const formatSpacing = (value: number | null) => {
-  if (value === null) return '-'
-
-  return `${value} in`
-}
-
-const isRecommendedSowingWindow = (seed: GardenSeed, window: SowingWindow) => {
-  if (!seed.recommended_sow_method) return false
-
-  return window.sow_method === seed.recommended_sow_method
-}
-
-const formatSowingWindowTiming = (window: SowingWindow) => {
-  const direction = formatLabel(window.sow_direction).toLowerCase()
-  const reference = formatLabel(window.sow_reference).toLowerCase()
-
-  return `${window.sow_start_weeks}-${window.sow_end_weeks} weeks ${direction} ${reference}`
-}
-
-const { data: seeds, pending, error, refresh } = await useAsyncData('garden-seed-catalog', async () => {
-  const supabase = createSupabaseClient()
-  const { data, error } = await supabase
-    .from('garden_seeds')
-    .select('*, garden_seed_sowing_windows(*)')
-    .order('type', { ascending: true })
-    .order('variety', { ascending: true })
-
-  if (error) {
-    throw createError({
-      statusCode: 500,
-      statusMessage: error.message
-    })
-  }
-
-  return data as SeedCatalogRow[]
-}, {
+const { data: seeds, pending, error, refresh } = await useAsyncData('garden-seed-catalog', () => $fetch<SeedCatalogRow[]>('/api/gardening/seeds'), {
   default: () => []
 })
 
@@ -126,20 +44,6 @@ const typeItems = computed(() => {
     }))
   ]
 })
-const sowMethodItems = [
-  { label: 'All sow methods', value: allFilterValue },
-  { label: 'Inside', value: 'inside' },
-  { label: 'Outside', value: 'outside' },
-  { label: 'Either', value: 'either' }
-]
-const featureItems = [
-  { label: 'All features', value: allFilterValue },
-  ...seedFeatureDefinitions.map(feature => ({
-    label: feature.label,
-    value: feature.value,
-    icon: feature.icon
-  }))
-]
 const filteredSeeds = computed(() => {
   const query = search.value.trim().toLowerCase()
 
@@ -191,10 +95,6 @@ const closeCreateSeedModal = () => {
   isOpen.value = false
 }
 
-const handleCreateSeedModalOpenChange = (open: boolean) => {
-  isOpen.value = open
-}
-
 const resetCreateSeedForm = () => {
   selectedSeed.value = null
   formResetKey.value += 1
@@ -242,7 +142,7 @@ const handleSeedSaved = () => {
     </UPageCard>
 
     <UModal
-      :open="isOpen"
+      v-model:open="isOpen"
       :title=" modalTitle "
       :description=" modalDescription "
       :close="{
@@ -252,7 +152,6 @@ const handleSeedSaved = () => {
         onClick: closeCreateSeedModal
       }"
       :ui=" { content: 'sm:max-w-4xl' } "
-      @update:open=" handleCreateSeedModalOpenChange "
       @after:leave=" resetCreateSeedForm "
     >
       <template #body>
@@ -292,12 +191,12 @@ const handleSeedSaved = () => {
 
         <USelect
           v-model=" selectedSowMethod "
-          :items=" sowMethodItems "
+          :items=" sowMethodFilterItems "
         />
 
         <USelect
           v-model=" selectedFeature "
-          :items=" featureItems "
+          :items=" seedFeatureFilterItems "
         />
 
         <USelect
@@ -434,13 +333,13 @@ const handleSeedSaved = () => {
                 <p class="text-sm text-muted">
                   Seed Depth
                 </p>
-                <p>{{ formatDepth(seed.seed_depth_inches) }}</p>
+                <p>{{ formatSeedDepth(seed.seed_depth_inches) }}</p>
               </div>
               <div>
                 <p class="text-sm text-muted">
                   Row Spacing
                 </p>
-                <p>{{ formatSpacing(seed.row_spacing_inches) }}</p>
+                <p>{{ formatInches(seed.row_spacing_inches) }}</p>
               </div>
               <div>
                 <p class="text-sm text-muted">

@@ -1,82 +1,26 @@
 <script setup lang="ts">
-import { addDays, compareAsc, format, isAfter, isBefore, isToday, parseISO } from 'date-fns'
-import type { Tables } from '../../../database/database.types'
-import { createSupabaseClient } from '~/libs/supabaseClient'
-
-type GardenSeed = Tables<'garden_seeds'>
-type GardenSeedTask = Tables<'garden_seed_tasks'>
-type SowingWindow = Tables<'garden_seed_sowing_windows'>
-type SeedTaskRow = GardenSeedTask & {
-  garden_seeds: Pick<GardenSeed, 'id' | 'type' | 'variety' | 'location_number' | 'recommended_sow_method' | 'source_image_url' | 'source_page_url'> | null
-}
-type SeedCatalogRow = GardenSeed & {
-  garden_seed_sowing_windows: SowingWindow[]
-}
+import { addDays, compareAsc, isAfter, isToday, parseISO } from 'date-fns'
+import type { GardenSeedTaskRow, SeedCatalogRow } from '~/types/gardening'
+import {
+  formatGardenDate,
+  formatSowingWindow,
+  getRecommendedSowingWindows,
+  getSeedName,
+  isGardenTaskOverdue
+} from '~/utils/gardening'
+import { formatLabel } from '~/utils/formatters'
 
 const today = new Date()
 const nextTwoWeeks = addDays(today, 14)
 
-const formatDate = (date: string) => format(parseISO(date), 'MMM d')
-const formatLabel = (value: string | null | undefined) => {
-  if (!value) return '-'
+const formatDate = (date: string) => formatGardenDate(date, 'MMM d')
+const isTaskOverdue = (task: GardenSeedTaskRow) => isGardenTaskOverdue(task, today)
+const isTaskDueSoon = (task: GardenSeedTaskRow) => task.status === 'pending' && !isTaskOverdue(task) && !isAfter(parseISO(task.due_date), nextTwoWeeks)
 
-  return value
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, letter => letter.toUpperCase())
-}
-const isTaskOverdue = (task: SeedTaskRow) => task.status === 'pending' && isBefore(parseISO(task.due_date), today) && !isToday(parseISO(task.due_date))
-const isTaskDueSoon = (task: SeedTaskRow) => task.status === 'pending' && !isBefore(parseISO(task.due_date), today) && !isAfter(parseISO(task.due_date), nextTwoWeeks)
-const getSeedName = (seed: Pick<GardenSeed, 'type' | 'variety'> | null) => {
-  if (!seed) return 'Unknown seed'
-
-  return `${seed.variety} ${seed.type}`
-}
-const getRecommendedWindows = (seed: SeedCatalogRow) => {
-  if (!seed.recommended_sow_method) return seed.garden_seed_sowing_windows
-
-  return seed.garden_seed_sowing_windows.filter(window => window.sow_method === seed.recommended_sow_method)
-}
-const formatSowingWindow = (window: SowingWindow) => {
-  const direction = formatLabel(window.sow_direction).toLowerCase()
-  const reference = formatLabel(window.sow_reference).toLowerCase()
-
-  return `${formatLabel(window.sow_method)}: ${window.sow_start_weeks}-${window.sow_end_weeks} weeks ${direction} ${reference}`
-}
-
-const { data, pending, error, refresh } = await useAsyncData('gardening-overview', async () => {
-  const supabase = createSupabaseClient()
-  const [tasksResponse, seedsResponse] = await Promise.all([
-    supabase
-      .from('garden_seed_tasks')
-      .select('*, garden_seeds(id, type, variety, location_number, recommended_sow_method, source_image_url, source_page_url)')
-      .order('due_date', { ascending: true })
-      .limit(100),
-    supabase
-      .from('garden_seeds')
-      .select('*, garden_seed_sowing_windows(*)')
-      .order('type', { ascending: true })
-      .order('variety', { ascending: true })
-  ])
-
-  if (tasksResponse.error) {
-    throw createError({
-      statusCode: 500,
-      statusMessage: tasksResponse.error.message
-    })
-  }
-
-  if (seedsResponse.error) {
-    throw createError({
-      statusCode: 500,
-      statusMessage: seedsResponse.error.message
-    })
-  }
-
-  return {
-    tasks: tasksResponse.data as SeedTaskRow[],
-    seeds: seedsResponse.data as SeedCatalogRow[]
-  }
-}, {
+const { data, pending, error, refresh } = await useAsyncData('gardening-overview', () => $fetch<{
+  tasks: GardenSeedTaskRow[]
+  seeds: SeedCatalogRow[]
+}>('/api/gardening/overview'), {
   default: () => ({
     tasks: [],
     seeds: []
@@ -113,7 +57,7 @@ const seedTypeHighlights = computed(() => {
 })
 const recommendedSowingSeeds = computed(() => {
   return data.value.seeds
-    .filter(seed => getRecommendedWindows(seed).length)
+    .filter(seed => getRecommendedSowingWindows(seed).length)
     .slice(0, 5)
 })
 </script>
@@ -318,7 +262,7 @@ const recommendedSowingSeeds = computed(() => {
               </div>
               <ul class="mt-2 grid gap-1 text-sm text-muted">
                 <li
-                  v-for="window in getRecommendedWindows(seed)"
+                  v-for="window in getRecommendedSowingWindows(seed)"
                   :key="window.id"
                 >
                   {{ formatSowingWindow(window) }}

@@ -1,98 +1,50 @@
 <script setup lang="ts">
-import { compareAsc, format, isAfter, isBefore, isToday, parseISO } from 'date-fns'
+import { compareAsc, isAfter, isToday, parseISO } from 'date-fns'
 import type { DropdownMenuItem } from '@nuxt/ui'
-import type { Enums, Tables } from '../../../database/database.types'
-import { createSupabaseClient } from '~/libs/supabaseClient'
+import type {
+  GardenSeedTaskRow,
+  GardenSeedTaskSeed,
+  GardenSeedTaskStatus
+} from '~/types/gardening'
+import {
+  formatGardenDate,
+  getSeedName,
+  isGardenTaskOverdue,
+  isGardenTaskUpcoming
+} from '~/utils/gardening'
+import { allFilterValue } from '~/utils/options/common'
+import {
+  gardenSeedTaskStatusFilterItems,
+  gardenSeedTaskStatusMeta,
+  gardenSeedTaskWindowItems
+} from '~/utils/options/gardening'
+import { formatLabel } from '~/utils/formatters'
 
-type GardenSeed = Pick<Tables<'garden_seeds'>, 'id' | 'type' | 'variety' | 'location_number' | 'recommended_sow_method' | 'source_image_url' | 'source_page_url'>
-type GardenSeedTask = Tables<'garden_seed_tasks'>
-type TaskStatus = Enums<'garden_seed_task_status'>
-type TaskRow = GardenSeedTask & {
-  garden_seeds: GardenSeed | null
-}
-
-const allFilterValue = 'all'
 const today = new Date()
 const toast = useToast()
 
-const selectedStatus = ref<TaskStatus | typeof allFilterValue>(allFilterValue)
+const selectedStatus = ref<GardenSeedTaskStatus | typeof allFilterValue>(allFilterValue)
 const selectedWindow = ref<'active' | 'all' | 'upcoming' | 'overdue' | 'completed'>('all')
 const isUpdatingTaskId = ref<string | null>(null)
 const isTaskModalOpen = ref(false)
-const selectedTask = ref<TaskRow | null>(null)
+const selectedTask = ref<GardenSeedTaskRow | null>(null)
 const taskFormResetKey = ref(0)
 
-const statusItems = [
-  { label: 'Pending', value: 'pending' },
-  { label: 'Completed', value: 'completed' },
-  { label: 'Skipped', value: 'skipped' },
-  { label: 'Canceled', value: 'canceled' },
-  { label: 'All statuses', value: allFilterValue }
-]
-const windowItems = [
-  { label: 'Active', value: 'active' },
-  { label: 'Overdue', value: 'overdue' },
-  { label: 'Upcoming', value: 'upcoming' },
-  { label: 'Completed', value: 'completed' },
-  { label: 'All tasks', value: 'all' }
-]
-const statusMeta = {
-  pending: {
-    label: 'Pending',
-    color: 'warning',
-    icon: 'i-lucide-clock'
-  },
-  completed: {
-    label: 'Completed',
-    color: 'success',
-    icon: 'i-lucide-check'
-  },
-  skipped: {
-    label: 'Skipped',
-    color: 'neutral',
-    icon: 'i-lucide-forward'
-  },
-  canceled: {
-    label: 'Canceled',
-    color: 'error',
-    icon: 'i-lucide-circle-x'
-  }
-} as const
-
-const tasks = ref<TaskRow[]>([])
-const seeds = ref<GardenSeed[]>([])
+const tasks = ref<GardenSeedTaskRow[]>([])
+const seeds = ref<GardenSeedTaskSeed[]>([])
 const pending = ref(false)
 const error = ref<Error | null>(null)
 
 const refreshSeeds = async () => {
-  const supabase = createSupabaseClient()
-  const { data, error: seedError } = await supabase
-    .from('garden_seeds')
-    .select('id, type, variety, location_number, recommended_sow_method, source_image_url, source_page_url')
-    .order('type', { ascending: true })
-    .order('variety', { ascending: true })
-
-  if (seedError) throw seedError
-
-  seeds.value = data as GardenSeed[]
+  seeds.value = await $fetch<GardenSeedTaskSeed[]>('/api/gardening/seeds/options')
 }
 
 const refresh = async () => {
   pending.value = true
   error.value = null
 
-  const supabase = createSupabaseClient()
-
   try {
-    const { data, error: taskError } = await supabase
-      .from('garden_seed_tasks')
-      .select('*, garden_seeds(id, type, variety, location_number, recommended_sow_method, source_image_url, source_page_url)')
-      .order('due_date', { ascending: true })
-      .order('created_at', { ascending: true })
-
-    if (taskError) throw taskError
-
-    tasks.value = data as TaskRow[]
+    tasks.value = await $fetch<GardenSeedTaskRow[]>('/api/gardening/tasks')
   } catch (refreshError) {
     error.value = refreshError instanceof Error
       ? refreshError
@@ -114,28 +66,17 @@ onMounted(() => {
   })
 })
 
-const formatDate = (date: string) => format(parseISO(date), 'MMM d, yyyy')
-const formatLabel = (value: string | null | undefined) => {
-  if (!value) return '-'
-
-  return value
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, letter => letter.toUpperCase())
-}
-const isTaskOverdue = (task: TaskRow) => task.status === 'pending' && isBefore(parseISO(task.due_date), today) && !isToday(parseISO(task.due_date))
-const isTaskUpcoming = (task: TaskRow) => task.status === 'pending' && (isAfter(parseISO(task.due_date), today) || isToday(parseISO(task.due_date)))
-const getDueTone = (task: TaskRow) => {
+const formatDate = (date: string) => formatGardenDate(date)
+const isTaskOverdue = (task: GardenSeedTaskRow) => isGardenTaskOverdue(task, today)
+const isTaskUpcoming = (task: GardenSeedTaskRow) => isGardenTaskUpcoming(task, today)
+const getDueTone = (task: GardenSeedTaskRow) => {
   if (task.status !== 'pending') return 'text-muted'
   if (isTaskOverdue(task)) return 'text-error'
   if (isToday(parseISO(task.due_date))) return 'text-warning'
 
   return 'text-muted'
 }
-const getTaskSeedName = (task: TaskRow) => {
-  if (!task.garden_seeds) return 'Unknown seed'
-
-  return `${task.garden_seeds.variety} ${task.garden_seeds.type}`
-}
+const getTaskSeedName = (task: GardenSeedTaskRow) => getSeedName(task.garden_seeds)
 
 const taskStats = computed(() => {
   const pendingTasks = tasks.value.filter(task => task.status === 'pending')
@@ -216,7 +157,7 @@ const groupedTasks = computed(() => {
   return groups.filter(group => group.tasks.length)
 })
 
-const getTaskActionItems = (task: TaskRow): DropdownMenuItem[][] => {
+const getTaskActionItems = (task: GardenSeedTaskRow): DropdownMenuItem[][] => {
   const statusItems: DropdownMenuItem[] = []
 
   if (task.status !== 'completed') {
@@ -259,17 +200,13 @@ const openCreateTaskModal = () => {
   isTaskModalOpen.value = true
 }
 
-const openEditTaskModal = (task: TaskRow) => {
+const openEditTaskModal = (task: GardenSeedTaskRow) => {
   selectedTask.value = task
   isTaskModalOpen.value = true
 }
 
 const closeTaskModal = () => {
   isTaskModalOpen.value = false
-}
-
-const handleTaskModalOpenChange = (open: boolean) => {
-  isTaskModalOpen.value = open
 }
 
 const resetTaskForm = () => {
@@ -282,26 +219,23 @@ const handleTaskSaved = () => {
   void refresh()
 }
 
-const updateTaskStatus = async (task: TaskRow, status: TaskStatus) => {
+const updateTaskStatus = async (task: GardenSeedTaskRow, status: GardenSeedTaskStatus) => {
   isUpdatingTaskId.value = task.id
 
   try {
-    const supabase = createSupabaseClient()
-    const { error } = await supabase
-      .from('garden_seed_tasks')
-      .update({
+    await $fetch(`/api/gardening/tasks/${task.id}`, {
+      method: 'PUT',
+      body: {
         status,
         completed_at: status === 'completed' ? new Date().toISOString() : null
-      })
-      .eq('id', task.id)
-
-    if (error) throw error
+      }
+    })
 
     toast.add({
       title: status === 'completed' ? 'Task completed' : 'Task updated',
       description: `${task.title} is now ${formatLabel(status).toLowerCase()}.`,
-      icon: statusMeta[status].icon,
-      color: statusMeta[status].color
+      icon: gardenSeedTaskStatusMeta[status].icon,
+      color: gardenSeedTaskStatusMeta[status].color
     })
     await refresh()
   } catch (error) {
@@ -338,36 +272,27 @@ const updateTaskStatus = async (task: TaskRow, status: TaskStatus) => {
         </div>
 
         <div class="flex flex-wrap gap-2">
-          <button
-            type="button"
-            class="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-3 text-sm font-medium text-inverted transition hover:bg-primary/90"
+          <UButton
+            label="Add Task"
+            icon="i-lucide-plus"
+            class="w-fit"
             @click="openCreateTaskModal"
-          >
-            <UIcon
-              name="i-lucide-plus"
-              class="size-4"
-            />
-            Add Task
-          </button>
-          <button
-            type="button"
-            class="inline-flex h-9 items-center gap-2 rounded-md border border-default px-3 text-sm font-medium text-highlighted transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
-            :disabled="isRefreshingTasks"
+          />
+          <UButton
+            label="Refresh"
+            :icon="isRefreshingTasks ? 'i-lucide-loader-circle' : 'i-lucide-refresh-cw'"
+            color="neutral"
+            variant="outline"
+            class="w-fit"
+            :loading="isRefreshingTasks"
             @click="refresh()"
-          >
-            <UIcon
-              :name="isRefreshingTasks ? 'i-lucide-loader-circle' : 'i-lucide-refresh-cw'"
-              class="size-4"
-              :class="{ 'animate-spin': isRefreshingTasks }"
-            />
-            Refresh
-          </button>
+          />
         </div>
       </div>
     </section>
 
     <UModal
-      :open="isTaskModalOpen"
+      v-model:open="isTaskModalOpen"
       :title="taskModalTitle"
       :description="taskModalDescription"
       :close="{
@@ -377,7 +302,6 @@ const updateTaskStatus = async (task: TaskRow, status: TaskStatus) => {
         onClick: closeTaskModal
       }"
       :ui="{ content: 'sm:max-w-2xl' }"
-      @update:open="handleTaskModalOpenChange"
       @after:leave="resetTaskForm"
     >
       <template #body>
@@ -410,60 +334,34 @@ const updateTaskStatus = async (task: TaskRow, status: TaskStatus) => {
       </div>
     </div>
 
-    <section
-      class="overflow-hidden rounded-lg border border-default bg-default shadow-xs"
+    <UPageCard
+      variant="subtle"
+      :ui="{ container: 'p-0 sm:p-0 overflow-hidden' }"
     >
       <div class="grid gap-3 border-b border-default p-4 md:grid-cols-[12rem_12rem_1fr]">
-        <select
+        <USelect
           v-model="selectedWindow"
-          class="h-9 rounded-md border border-default bg-default px-3 text-sm text-highlighted outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+          :items="gardenSeedTaskWindowItems"
           aria-label="Task window"
-        >
-          <option
-            v-for="item in windowItems"
-            :key="item.value"
-            :value="item.value"
-          >
-            {{ item.label }}
-          </option>
-        </select>
-        <select
+        />
+        <USelect
           v-model="selectedStatus"
-          class="h-9 rounded-md border border-default bg-default px-3 text-sm text-highlighted outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+          :items="gardenSeedTaskStatusFilterItems"
           aria-label="Task status"
-        >
-          <option
-            v-for="item in statusItems"
-            :key="item.value"
-            :value="item.value"
-          >
-            {{ item.label }}
-          </option>
-        </select>
+        />
         <p class="self-center text-sm text-muted md:text-right">
           {{ filteredTasks.length }} tasks
         </p>
       </div>
 
-      <div
+      <UAlert
         v-if="error"
-        class="border-b border-error/30 bg-error/10 p-4 text-sm text-error"
-      >
-        <div class="flex gap-2">
-          <UIcon
-            name="i-lucide-triangle-alert"
-            class="mt-0.5 size-4 shrink-0"
-          />
-          <div>
-            <p class="font-medium">
-              Planting tasks could not be loaded
-            </p>
-            <p class="mt-1">
-              {{ error.message }}
-            </p>
-          </div>
-        </div>
-      </div>
+        title="Planting tasks could not be loaded"
+        :description="error.message"
+        color="error"
+        icon="i-lucide-triangle-alert"
+        class="rounded-none border-x-0 border-t-0"
+      />
 
       <div
         v-else-if="showLoadingTasks"
@@ -505,9 +403,9 @@ const updateTaskStatus = async (task: TaskRow, status: TaskStatus) => {
               <div class="min-w-0">
                 <div class="flex flex-wrap items-center gap-2">
                   <UBadge
-                    :label="statusMeta[task.status].label"
-                    :icon="statusMeta[task.status].icon"
-                    :color="statusMeta[task.status].color"
+                    :label="gardenSeedTaskStatusMeta[task.status].label"
+                    :icon="gardenSeedTaskStatusMeta[task.status].icon"
+                    :color="gardenSeedTaskStatusMeta[task.status].color"
                     variant="subtle"
                   />
                   <span class="text-sm text-muted">
@@ -564,6 +462,6 @@ const updateTaskStatus = async (task: TaskRow, status: TaskStatus) => {
           </div>
         </div>
       </div>
-    </section>
+    </UPageCard>
   </div>
 </template>

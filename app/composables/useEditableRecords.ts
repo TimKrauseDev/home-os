@@ -1,53 +1,9 @@
-import type { DomainTableField, DomainTableFilter, DomainTableOrder, DomainTableRecord } from '~/types/domain-table'
-import { createSupabaseClient } from '~/libs/supabaseClient'
-
-type EditableRecordConfig = {
-  title: string
-  addLabel: string
-  fields: readonly DomainTableField[]
-  filters?: readonly DomainTableFilter[]
-  initialRecords?: readonly DomainTableRecord[]
-  orderBy?: DomainTableOrder
-  tableName?: string
-}
-
-type SupabaseError = {
-  message: string
-}
-
-type SupabaseResult<T> = Promise<{
-  data: T | null
-  error: SupabaseError | null
-}>
-
-type SupabaseTable = {
-  select: (columns?: string) => SupabaseSelectQuery
-  insert: (row: Record<string, unknown>) => {
-    select: () => {
-      single: () => SupabaseResult<DomainTableRecord>
-    }
-  }
-  update: (row: Record<string, unknown>) => {
-    eq: (column: string, value: string) => {
-      select: () => {
-        single: () => SupabaseResult<DomainTableRecord>
-      }
-    }
-  }
-}
-
-type SupabaseSelectQuery = {
-  eq: (column: string, value: string | number | boolean) => SupabaseSelectQuery
-  order: (column: string, options: { ascending: boolean }) => SupabaseResult<DomainTableRecord[]>
-}
-
-const getSupabaseTable = (tableName: string) => {
-  const supabase = createSupabaseClient() as unknown as {
-    from: (name: string) => SupabaseTable
-  }
-
-  return supabase.from(tableName)
-}
+import type {
+  DomainTableField,
+  DomainTableRecord,
+  EditableRecordConfig
+} from '~/types/domain-table'
+import { formatDisplayValue } from '~/utils/formatters'
 
 export const useEditableRecords = (config: EditableRecordConfig) => {
   const toast = useToast()
@@ -63,15 +19,7 @@ export const useEditableRecords = (config: EditableRecordConfig) => {
   const modalTitle = computed(() => selectedRecord.value ? `Edit ${config.addLabel.replace(/^Add\s+/i, '')}` : config.addLabel)
   const isMissingValue = (value: unknown) => value === null || value === undefined || value === ''
 
-  const formatLabel = (value: unknown) => {
-    if (value === null || value === undefined || value === '') return '-'
-    if (typeof value === 'boolean') return value ? 'Yes' : 'No'
-    if (typeof value === 'number') return new Intl.NumberFormat('en-US').format(value)
-
-    return String(value)
-      .replace(/_/g, ' ')
-      .replace(/\b\w/g, letter => letter.toUpperCase())
-  }
+  const formatLabel = formatDisplayValue
 
   const resetForm = () => {
     form.id = selectedRecord.value?.id ?? crypto.randomUUID()
@@ -113,25 +61,24 @@ export const useEditableRecords = (config: EditableRecordConfig) => {
     isLoading.value = true
 
     const orderBy = config.orderBy ?? { column: 'created_at', ascending: false }
-    let query = getSupabaseTable(config.tableName)
-      .select('*')
+    try {
+      const data = await $fetch<DomainTableRecord[]>('/api/domain-records', {
+        query: {
+          tableName: config.tableName,
+          orderColumn: orderBy.column,
+          orderAscending: String(orderBy.ascending ?? false),
+          filters: (config.filters ?? []).map(filter => JSON.stringify(filter))
+        }
+      })
 
-    for (const filter of config.filters ?? []) {
-      query = query.eq(filter.column, filter.value)
-    }
-
-    const { data, error } = await query
-      .order(orderBy.column, { ascending: orderBy.ascending ?? false })
-
-    if (error) {
+      records.value = data.map(record => ({ ...record }))
+    } catch (error) {
       toast.add({
         title: `Could not load ${config.title}`,
-        description: error.message,
+        description: error instanceof Error ? error.message : `${config.title} could not be loaded.`,
         icon: 'i-lucide-triangle-alert',
         color: 'error'
       })
-    } else {
-      records.value = (data ?? []).map(record => ({ ...record }))
     }
 
     isLoading.value = false
@@ -145,24 +92,28 @@ export const useEditableRecords = (config: EditableRecordConfig) => {
 
       const valueColumn = field.optionSource.valueColumn ?? 'id'
       const orderBy = field.optionSource.orderBy ?? { column: field.optionSource.labelColumn, ascending: true }
-      const { data, error } = await getSupabaseTable(field.optionSource.tableName)
-        .select(`${valueColumn},${field.optionSource.labelColumn}`)
-        .order(orderBy.column, { ascending: orderBy.ascending ?? true })
+      try {
+        const data = await $fetch<DomainTableRecord[]>('/api/domain-records', {
+          query: {
+            tableName: field.optionSource.tableName,
+            select: `${valueColumn},${field.optionSource.labelColumn}`,
+            orderColumn: orderBy.column,
+            orderAscending: String(orderBy.ascending ?? true)
+          }
+        })
 
-      if (error) {
+        field.options = data.map(option => ({
+          label: String(option[field.optionSource?.labelColumn ?? 'id'] ?? option.id),
+          value: String(option[valueColumn] ?? '')
+        }))
+      } catch (error) {
         toast.add({
           title: `Could not load ${field.label} options`,
-          description: error.message,
+          description: error instanceof Error ? error.message : `${field.label} options could not be loaded.`,
           icon: 'i-lucide-triangle-alert',
           color: 'error'
         })
-        return
       }
-
-      field.options = (data ?? []).map(option => ({
-        label: String(option[field.optionSource?.labelColumn ?? 'id'] ?? option.id),
-        value: String(option[valueColumn] ?? '')
-      }))
     }))
   }
 
@@ -186,29 +137,39 @@ export const useEditableRecords = (config: EditableRecordConfig) => {
       const payload = Object.fromEntries(
         Object.entries(nextRecord).filter(([, value]) => !isMissingValue(value))
       )
-      const result = selectedRecord.value
-        ? await getSupabaseTable(config.tableName).update(payload).eq('id', nextRecord.id).select().single()
-        : await getSupabaseTable(config.tableName).insert(payload).select().single()
+      try {
+        const result = selectedRecord.value
+          ? await $fetch<DomainTableRecord>(`/api/domain-records/${nextRecord.id}`, {
+              method: 'PUT',
+              body: {
+                tableName: config.tableName,
+                payload
+              }
+            })
+          : await $fetch<DomainTableRecord>('/api/domain-records', {
+              method: 'POST',
+              body: {
+                tableName: config.tableName,
+                payload
+              }
+            })
 
-      if (result.error) {
+        const index = records.value.findIndex(record => record.id === result.id)
+
+        if (index >= 0) {
+          records.value[index] = { ...result }
+        } else {
+          records.value.unshift({ ...result })
+        }
+      } catch (error) {
         toast.add({
           title: selectedRecord.value ? 'Update failed' : 'Add failed',
-          description: result.error.message,
+          description: error instanceof Error ? error.message : 'Record could not be saved.',
           icon: 'i-lucide-triangle-alert',
           color: 'error'
         })
         isSaving.value = false
         return
-      }
-
-      if (result.data) {
-        const index = records.value.findIndex(record => record.id === result.data?.id)
-
-        if (index >= 0) {
-          records.value[index] = { ...result.data }
-        } else {
-          records.value.unshift({ ...result.data })
-        }
       }
     } else {
       const index = records.value.findIndex(record => record.id === nextRecord.id)
@@ -246,7 +207,7 @@ export const useEditableRecords = (config: EditableRecordConfig) => {
       }).format(new Date(value))
     }
 
-    return option?.label ?? formatLabel(value)
+    return option?.label ?? formatDisplayValue(value)
   }
 
   onMounted(loadPageData)

@@ -1,23 +1,12 @@
 <script setup lang="ts">
-type StatCard = {
-  label: string
-  value: string
-  icon: string
-}
-
-type PageSection = {
-  title: string
-  description: string
-  icon: string
-  items: string[]
-}
+import type { DomainScaffoldSection, DomainScaffoldStatCard } from '~/types/domain-scaffold'
 
 defineProps<{
   title: string
   description: string
   icon: string
-  stats?: StatCard[]
-  sections?: PageSection[]
+  stats?: DomainScaffoldStatCard[]
+  sections?: DomainScaffoldSection[]
 }>()
 </script>
 

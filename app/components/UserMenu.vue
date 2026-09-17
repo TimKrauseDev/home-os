@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { DropdownMenuItem } from '@nuxt/ui'
+import type { ChipMenuItem } from '~/types/navigation'
 
 defineProps<{
   collapsed?: boolean
@@ -128,8 +129,8 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
         <span
           class="rounded-full ring ring-bg bg-(--chip-light) dark:bg-(--chip-dark) size-2"
           :style="{
-            '--chip-light': `var(--color-${(item as any).chip}-500)`,
-            '--chip-dark': `var(--color-${(item as any).chip}-400)`
+            '--chip-light': `var(--color-${(item as ChipMenuItem).chip}-500)`,
+            '--chip-dark': `var(--color-${(item as ChipMenuItem).chip}-400)`
           }"
         />
       </div>

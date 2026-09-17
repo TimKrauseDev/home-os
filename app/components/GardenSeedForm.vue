@@ -1,47 +1,20 @@
 <script setup lang="ts">
-import type { Enums, Tables, TablesInsert, TablesUpdate } from '../../database/database.types'
-import { createSupabaseClient } from '~/libs/supabaseClient'
-
-type GardenSeed = Tables<'garden_seeds'>
-type SowingWindow = Tables<'garden_seed_sowing_windows'>
-type SeedCatalogRow = GardenSeed & {
-  garden_seed_sowing_windows: SowingWindow[]
-}
-type SeedInsert = TablesInsert<'garden_seeds'>
-type SeedUpdate = TablesUpdate<'garden_seeds'>
-type SowingWindowInsert = TablesInsert<'garden_seed_sowing_windows'>
-type SowMethod = Enums<'garden_sow_method'>
-type SowReference = Enums<'garden_sow_reference'>
-type SowDirection = Enums<'garden_sow_direction'>
-type SunType = Enums<'garden_sun_type'>
-type SeedDepth = Enums<'garden_seed_depth_inches'>
-type NewSowingWindow = {
-  sow_method: SowMethod
-  sow_reference: SowReference
-  sow_direction: SowDirection
-  sow_start_weeks: number
-  sow_end_weeks: number
-  notes: string
-}
-type SeedForm = {
-  location_number: string
-  type: string
-  variety: string
-  recommended_sow_method: SowMethod | null
-  is_succession_planted: boolean
-  succession_interval_days: number | null
-  days_to_emerge: number | null
-  days_to_maturity: number | null
-  seed_depth_inches: SeedDepth | null
-  row_spacing_inches: number | null
-  is_deer_resistant: boolean
-  sun_type: SunType
-  purchased_from: string
-  source_page_url: string
-  source_image_url: string
-  overall_rating: number | null
-  notes: string
-}
+import type {
+  NewSowingWindow,
+  SeedCatalogRow,
+  SeedForm,
+  SeedInsert,
+  SeedUpdate
+} from '~/types/gardening'
+import { cleanText } from '~/utils/form'
+import {
+  optionalSeedDepthItems,
+  optionalSowMethodItems,
+  sowDirectionItems,
+  sowMethodFormItems,
+  sowReferenceItems,
+  sunTypeItems
+} from '~/utils/options/gardening'
 
 const props = defineProps<{
   seed?: SeedCatalogRow | null
@@ -57,35 +30,6 @@ const isSavingSeed = ref(false)
 const isFetchingPreviewImage = ref(false)
 const seedFormError = ref<string | null>(null)
 const toast = useToast()
-
-const sowMethodFormItems = [
-  { label: 'Inside', value: 'inside' },
-  { label: 'Outside', value: 'outside' },
-  { label: 'Either', value: 'either' }
-] satisfies { label: string, value: SowMethod }[]
-const sowReferenceItems = [
-  { label: 'Last frost', value: 'last_frost' },
-  { label: 'First frost', value: 'first_frost' }
-] satisfies { label: string, value: SowReference }[]
-const sowDirectionItems = [
-  { label: 'Before', value: 'before' },
-  { label: 'After', value: 'after' }
-] satisfies { label: string, value: SowDirection }[]
-const sunTypeItems = [
-  { label: 'Full sun', value: 'full_sun' },
-  { label: 'Partial sun', value: 'partial_sun' },
-  { label: 'Partial shade', value: 'partial_shade' },
-  { label: 'Shade', value: 'shade' },
-  { label: 'Unknown', value: 'unknown' }
-] satisfies { label: string, value: SunType }[]
-const seedDepthItems = [
-  { label: 'Surface', value: '0' },
-  { label: '1/8 in', value: '0.125' },
-  { label: '1/4 in', value: '0.25' },
-  { label: '1/2 in', value: '0.5' },
-  { label: '3/4 in', value: '0.75' },
-  { label: '1 in', value: '1' }
-] satisfies { label: string, value: SeedDepth }[]
 
 const buildEmptySeedForm = (): SeedForm => ({
   location_number: '',
@@ -120,12 +64,6 @@ const seedForm = reactive<SeedForm>(buildEmptySeedForm())
 const newSowingWindows = ref<NewSowingWindow[]>([buildEmptySowingWindow()])
 const isEditing = computed(() => Boolean(props.seed))
 const submitLabel = computed(() => isEditing.value ? 'Update Seed' : 'Save Seed')
-
-const cleanText = (value: string) => {
-  const trimmedValue = value.trim()
-
-  return trimmedValue ? trimmedValue : null
-}
 
 const populateSeedForm = (seed: SeedCatalogRow) => {
   Object.assign(seedForm, {
@@ -242,7 +180,6 @@ const saveSeed = async () => {
       await fetchPreviewImage()
     }
 
-    const supabase = createSupabaseClient()
     const seedPayload: SeedInsert | SeedUpdate = {
       location_number: cleanText(seedForm.location_number),
       type: seedForm.type.trim(),
@@ -263,23 +200,7 @@ const saveSeed = async () => {
       notes: cleanText(seedForm.notes)
     }
     const seedId = props.seed?.id
-    const { data: savedSeed, error: seedError } = isEditing.value && seedId
-      ? await supabase
-          .from('garden_seeds')
-          .update(seedPayload)
-          .eq('id', seedId)
-          .select('id')
-          .single()
-      : await supabase
-          .from('garden_seeds')
-          .insert(seedPayload as SeedInsert)
-          .select('id')
-          .single()
-
-    if (seedError) throw seedError
-
-    const sowingWindows: SowingWindowInsert[] = newSowingWindows.value.map(window => ({
-      seed_id: savedSeed.id,
+    const sowingWindows = newSowingWindows.value.map(window => ({
       sow_method: window.sow_method,
       sow_reference: window.sow_reference,
       sow_direction: window.sow_direction,
@@ -288,21 +209,22 @@ const saveSeed = async () => {
       notes: cleanText(window.notes)
     }))
 
-    if (isEditing.value) {
-      const { error: deleteWindowsError } = await supabase
-        .from('garden_seed_sowing_windows')
-        .delete()
-        .eq('seed_id', savedSeed.id)
-
-      if (deleteWindowsError) throw deleteWindowsError
-    }
-
-    if (sowingWindows.length) {
-      const { error: sowingWindowError } = await supabase
-        .from('garden_seed_sowing_windows')
-        .insert(sowingWindows)
-
-      if (sowingWindowError) throw sowingWindowError
+    if (isEditing.value && seedId) {
+      await $fetch(`/api/gardening/seeds/${seedId}`, {
+        method: 'PUT',
+        body: {
+          seed: seedPayload,
+          sowingWindows
+        }
+      })
+    } else {
+      await $fetch('/api/gardening/seeds', {
+        method: 'POST',
+        body: {
+          seed: seedPayload as SeedInsert,
+          sowingWindows
+        }
+      })
     }
 
     resetSeedForm()
@@ -331,9 +253,10 @@ const saveSeed = async () => {
 
 <template>
   <div class="max-h-[75vh] overflow-y-auto pr-1">
-    <form
+    <UForm
+      :state="seedForm"
       class="flex flex-col gap-5"
-      @submit.prevent="saveSeed"
+      @submit="saveSeed"
     >
       <UAlert
         v-if="seedFormError"
@@ -357,54 +280,27 @@ const saveSeed = async () => {
         </UFormField>
 
         <UFormField label="Recommended Sow" name="recommended_sow_method">
-          <select
+          <USelect
             v-model="seedForm.recommended_sow_method"
-            class="h-9 w-full rounded-md border border-default bg-default px-3 text-sm text-highlighted outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-          >
-            <option :value="null">
-              None
-            </option>
-            <option
-              v-for="item in sowMethodFormItems"
-              :key="item.value"
-              :value="item.value"
-            >
-              {{ item.label }}
-            </option>
-          </select>
+            :items="optionalSowMethodItems"
+            class="w-full"
+          />
         </UFormField>
 
         <UFormField label="Sun" name="sun_type">
-          <select
+          <USelect
             v-model="seedForm.sun_type"
-            class="h-9 w-full rounded-md border border-default bg-default px-3 text-sm text-highlighted outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-          >
-            <option
-              v-for="item in sunTypeItems"
-              :key="item.value"
-              :value="item.value"
-            >
-              {{ item.label }}
-            </option>
-          </select>
+            :items="sunTypeItems"
+            class="w-full"
+          />
         </UFormField>
 
         <UFormField label="Seed Depth" name="seed_depth_inches">
-          <select
+          <USelect
             v-model="seedForm.seed_depth_inches"
-            class="h-9 w-full rounded-md border border-default bg-default px-3 text-sm text-highlighted outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-          >
-            <option :value="null">
-              None
-            </option>
-            <option
-              v-for="item in seedDepthItems"
-              :key="item.value"
-              :value="item.value"
-            >
-              {{ item.label }}
-            </option>
-          </select>
+            :items="optionalSeedDepthItems"
+            class="w-full"
+          />
         </UFormField>
 
         <UFormField label="Days To Emerge" name="days_to_emerge">
@@ -499,46 +395,25 @@ const saveSeed = async () => {
           class="grid gap-3 rounded-md border border-default p-3 lg:grid-cols-[8rem_9rem_8rem_7rem_7rem_minmax(0,1fr)_auto]"
         >
           <UFormField label="Method">
-            <select
+            <USelect
               v-model="window.sow_method"
-              class="h-9 w-full rounded-md border border-default bg-default px-3 text-sm text-highlighted outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-            >
-              <option
-                v-for="item in sowMethodFormItems"
-                :key="item.value"
-                :value="item.value"
-              >
-                {{ item.label }}
-              </option>
-            </select>
+              :items="sowMethodFormItems"
+              class="w-full"
+            />
           </UFormField>
           <UFormField label="Reference">
-            <select
+            <USelect
               v-model="window.sow_reference"
-              class="h-9 w-full rounded-md border border-default bg-default px-3 text-sm text-highlighted outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-            >
-              <option
-                v-for="item in sowReferenceItems"
-                :key="item.value"
-                :value="item.value"
-              >
-                {{ item.label }}
-              </option>
-            </select>
+              :items="sowReferenceItems"
+              class="w-full"
+            />
           </UFormField>
           <UFormField label="Direction">
-            <select
+            <USelect
               v-model="window.sow_direction"
-              class="h-9 w-full rounded-md border border-default bg-default px-3 text-sm text-highlighted outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-            >
-              <option
-                v-for="item in sowDirectionItems"
-                :key="item.value"
-                :value="item.value"
-              >
-                {{ item.label }}
-              </option>
-            </select>
+              :items="sowDirectionItems"
+              class="w-full"
+            />
           </UFormField>
           <UFormField label="Start (weeks)">
             <UInputNumber v-model="window.sow_start_weeks" :min="0" />
@@ -576,6 +451,6 @@ const saveSeed = async () => {
           :loading="isSavingSeed"
         />
       </div>
-    </form>
+    </UForm>
   </div>
 </template>

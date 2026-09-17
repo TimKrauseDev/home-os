@@ -1,26 +1,17 @@
 <script setup lang="ts">
-import type { Enums, Tables, TablesInsert, TablesUpdate } from '../../database/database.types'
-import { createSupabaseClient } from '~/libs/supabaseClient'
-
-type GardenSeed = Pick<Tables<'garden_seeds'>, 'id' | 'type' | 'variety' | 'location_number'>
-type GardenSeedTask = Tables<'garden_seed_tasks'>
-type TaskStatus = Enums<'garden_seed_task_status'>
-type TaskRow = GardenSeedTask & {
-  garden_seeds: GardenSeed | null
-}
-type TaskInsert = TablesInsert<'garden_seed_tasks'>
-type TaskUpdate = TablesUpdate<'garden_seed_tasks'>
-type TaskForm = {
-  seed_id: string
-  title: string
-  due_date: string
-  status: TaskStatus
-  notes: string
-}
+import type {
+  GardenSeedTaskForm,
+  GardenSeedTaskInsert,
+  GardenSeedTaskRow,
+  GardenSeedTaskSeedOption,
+  GardenSeedTaskUpdate
+} from '~/types/gardening'
+import { cleanText } from '~/utils/form'
+import { gardenSeedTaskStatusItems } from '~/utils/options/gardening'
 
 const props = defineProps<{
-  seeds: GardenSeed[]
-  task?: TaskRow | null
+  seeds: GardenSeedTaskSeedOption[]
+  task?: GardenSeedTaskRow | null
   resetKey?: number
 }>()
 
@@ -33,13 +24,6 @@ const toast = useToast()
 const isSavingTask = ref(false)
 const taskFormError = ref<string | null>(null)
 
-const statusItems = [
-  { label: 'Pending', value: 'pending' },
-  { label: 'Completed', value: 'completed' },
-  { label: 'Skipped', value: 'skipped' },
-  { label: 'Canceled', value: 'canceled' }
-] satisfies { label: string, value: TaskStatus }[]
-
 const isEditing = computed(() => Boolean(props.task))
 const submitLabel = computed(() => isEditing.value ? 'Update Task' : 'Save Task')
 const seedOptions = computed(() => props.seeds.map(seed => ({
@@ -47,7 +31,7 @@ const seedOptions = computed(() => props.seeds.map(seed => ({
   value: seed.id
 })))
 
-const buildEmptyTaskForm = (): TaskForm => ({
+const buildEmptyTaskForm = (): GardenSeedTaskForm => ({
   seed_id: props.seeds[0]?.id ?? '',
   title: '',
   due_date: new Date().toISOString().slice(0, 10),
@@ -55,15 +39,9 @@ const buildEmptyTaskForm = (): TaskForm => ({
   notes: ''
 })
 
-const taskForm = reactive<TaskForm>(buildEmptyTaskForm())
+const taskForm = reactive<GardenSeedTaskForm>(buildEmptyTaskForm())
 
-const cleanText = (value: string) => {
-  const trimmedValue = value.trim()
-
-  return trimmedValue ? trimmedValue : null
-}
-
-const populateTaskForm = (task: TaskRow) => {
+const populateTaskForm = (task: GardenSeedTaskRow) => {
   Object.assign(taskForm, {
     seed_id: task.seed_id,
     title: task.title,
@@ -113,11 +91,10 @@ const saveTask = async () => {
   isSavingTask.value = true
 
   try {
-    const supabase = createSupabaseClient()
     const completedAt = taskForm.status === 'completed'
       ? props.task?.completed_at ?? new Date().toISOString()
       : null
-    const taskPayload: TaskInsert | TaskUpdate = {
+    const taskPayload: GardenSeedTaskInsert | GardenSeedTaskUpdate = {
       seed_id: taskForm.seed_id,
       title: taskForm.title.trim(),
       due_date: taskForm.due_date,
@@ -126,16 +103,17 @@ const saveTask = async () => {
       notes: cleanText(taskForm.notes)
     }
     const taskId = props.task?.id
-    const { error } = isEditing.value && taskId
-      ? await supabase
-          .from('garden_seed_tasks')
-          .update(taskPayload)
-          .eq('id', taskId)
-      : await supabase
-          .from('garden_seed_tasks')
-          .insert(taskPayload as TaskInsert)
-
-    if (error) throw error
+    if (isEditing.value && taskId) {
+      await $fetch(`/api/gardening/tasks/${taskId}`, {
+        method: 'PUT',
+        body: taskPayload
+      })
+    } else {
+      await $fetch('/api/gardening/tasks', {
+        method: 'POST',
+        body: taskPayload as GardenSeedTaskInsert
+      })
+    }
 
     toast.add({
       title: isEditing.value ? 'Task updated' : 'Task added',
@@ -162,9 +140,10 @@ const saveTask = async () => {
 </script>
 
 <template>
-  <form
+  <UForm
+    :state="taskForm"
     class="flex flex-col gap-5"
-    @submit.prevent="saveTask"
+    @submit="saveTask"
   >
     <UAlert
       v-if="taskFormError"
@@ -230,18 +209,11 @@ const saveTask = async () => {
         label="Status"
         name="status"
       >
-        <select
+        <USelect
           v-model="taskForm.status"
-          class="h-9 w-full rounded-md border border-default bg-default px-3 text-sm text-highlighted outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-        >
-          <option
-            v-for="status in statusItems"
-            :key="status.value"
-            :value="status.value"
-          >
-            {{ status.label }}
-          </option>
-        </select>
+          :items="gardenSeedTaskStatusItems"
+          class="w-full"
+        />
       </UFormField>
 
       <UFormField
@@ -273,5 +245,5 @@ const saveTask = async () => {
         :disabled="!seeds.length"
       />
     </div>
-  </form>
+  </UForm>
 </template>

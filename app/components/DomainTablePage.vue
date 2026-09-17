@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { DomainStatCard, DomainTableField, DomainTableFilter, DomainTableOrder, DomainTableRecord } from '~/types/domain-table'
+import { allFilterValue, pageSizeItems } from '~/utils/options/common'
 
 const props = defineProps<{
   title: string
@@ -32,11 +33,6 @@ const {
   tableFields
 } = useEditableRecords(props)
 
-const allFilterValue = 'all'
-const pageSizeItems = [10, 25, 50].map(size => ({
-  label: `${size} per page`,
-  value: size
-}))
 const search = ref('')
 const activeFilters = reactive<Record<string, string>>({})
 const selectedPageSize = ref(10)
@@ -50,6 +46,10 @@ const detailFields = computed(() => {
   return hydratedFields.value.filter(field => !summaryKeys.has(field.key))
 })
 const expandedRecordId = ref<string | null>(null)
+
+const setSelectFieldValue = (key: string, value: unknown) => {
+  form[key] = value === null || value === undefined ? null : String(value)
+}
 
 watch(filterFields, (fields) => {
   for (const field of fields) {
@@ -135,7 +135,7 @@ watch(activeFilters, () => {
     </section>
 
     <UModal
-      :open="isOpen"
+      v-model:open="isOpen"
       :title="modalTitle"
       :close="{
         color: 'primary',
@@ -144,10 +144,13 @@ watch(activeFilters, () => {
         onClick: closeModal
       }"
       :ui="{ content: 'sm:max-w-3xl' }"
-      @update:open="isOpen = $event"
     >
       <template #body>
-        <form class="grid gap-4" @submit.prevent="saveRecord">
+        <UForm
+          :state="form"
+          class="grid gap-4"
+          @submit="saveRecord"
+        >
           <div class="grid gap-4 sm:grid-cols-2">
             <UFormField
               v-for="field in hydratedFields"
@@ -171,19 +174,13 @@ watch(activeFilters, () => {
                 v-model="form[field.key] as boolean"
                 :label="field.label"
               />
-              <select
+              <USelect
                 v-else-if="field.type === 'select'"
-                v-model="form[field.key]"
-                class="h-9 w-full rounded-md border border-default bg-default px-3 text-sm text-highlighted outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-              >
-                <option
-                  v-for="option in field.options"
-                  :key="option.value"
-                  :value="option.value"
-                >
-                  {{ option.label }}
-                </option>
-              </select>
+                :model-value="String(form[field.key] ?? '')"
+                :items="[...(field.options ?? [])]"
+                class="w-full"
+                @update:model-value="value => setSelectFieldValue(field.key, value)"
+              />
               <UInput
                 v-else
                 v-model="form[field.key] as string"
@@ -207,7 +204,7 @@ watch(activeFilters, () => {
               :loading="isSaving"
             />
           </div>
-        </form>
+        </UForm>
       </template>
     </UModal>
 

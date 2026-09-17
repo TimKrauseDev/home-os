@@ -1,74 +1,29 @@
 <script setup lang="ts">
 import type {
-  MaintenanceCadence,
-  MaintenanceCadenceType,
   MaintenanceCadenceUnit,
   MaintenanceSeason
-} from '~/utils/maintenanceCadence'
+} from '~/types/maintenance-cadence'
+import type {
+  MaintenanceArea,
+  MaintenanceCadencePayload,
+  MaintenanceCadenceRow,
+  MaintenanceTaskFormState,
+  MaintenanceTaskPayload,
+  MaintenanceTaskRow
+} from '~/types/home-maintenance'
 import {
   calculateMaintenanceDueDate,
   formatMaintenanceCadence
 } from '~/utils/maintenanceCadence'
-import { createSupabaseClient } from '~/libs/supabaseClient'
-
-type MaintenanceTaskStatus = 'active' | 'archived' | 'in_progress' | 'paused'
-type MaintenancePriority = 'high' | 'low' | 'medium'
-type MaintenanceArea = 'exterior' | 'interior'
-type MaintenanceCadenceRow = MaintenanceCadence & {
-  id?: string
-  notes?: string | null
-}
-type MaintenanceTaskRow = {
-  id: string
-  title: string
-  description: string | null
-  area: MaintenanceArea | null
-  next_due_date: string | null
-  last_completed_at: string | null
-  status: MaintenanceTaskStatus
-  priority: MaintenancePriority
-  notes: string | null
-  home_maintenance_task_cadences: MaintenanceCadenceRow[]
-}
-type MaintenanceTaskPayload = {
-  title: string
-  description: string | null
-  area: MaintenanceArea | null
-  next_due_date: string | null
-  status: MaintenanceTaskStatus
-  priority: MaintenancePriority
-  notes: string | null
-}
-type MaintenanceCadencePayload = MaintenanceCadence & {
-  task_id: string
-  notes: string | null
-}
-type SupabaseResult<T> = Promise<{
-  data: T | null
-  error: { message: string } | null
-}>
-type SupabaseClient = {
-  from: (table: string) => {
-    delete: () => {
-      eq: (column: string, value: string) => SupabaseResult<null>
-    }
-    insert: (payload: MaintenanceTaskPayload | MaintenanceCadencePayload | MaintenanceCadencePayload[]) => {
-      select: () => {
-        single: () => SupabaseResult<MaintenanceTaskRow>
-      }
-    }
-    update: (payload: MaintenanceTaskPayload) => {
-      eq: (column: string, value: string) => {
-        select: () => {
-          single: () => SupabaseResult<MaintenanceTaskRow>
-        }
-      }
-    }
-  }
-}
-type TaskForm = MaintenanceTaskPayload & {
-  cadences: MaintenanceCadenceRow[]
-}
+import { cleanText } from '~/utils/form'
+import {
+  maintenanceAreaItems,
+  maintenanceCadenceTypeItems,
+  maintenanceCadenceUnitItems,
+  maintenancePriorityItems,
+  maintenanceSeasonItems,
+  maintenanceStatusItems
+} from '~/utils/options/homeMaintenance'
 
 const props = defineProps<{
   task?: MaintenanceTaskRow | null
@@ -85,40 +40,6 @@ const isSaving = ref(false)
 const formError = ref<string | null>(null)
 const dueDateWasEdited = ref(false)
 
-const statusItems = [
-  { label: 'Active', value: 'active' },
-  { label: 'In Progress', value: 'in_progress' },
-  { label: 'Paused', value: 'paused' },
-  { label: 'Archived', value: 'archived' }
-] satisfies { label: string, value: MaintenanceTaskStatus }[]
-const priorityItems = [
-  { label: 'Low', value: 'low' },
-  { label: 'Medium', value: 'medium' },
-  { label: 'High', value: 'high' }
-] satisfies { label: string, value: MaintenancePriority }[]
-const areaItems = [
-  { label: 'Interior', value: 'interior' },
-  { label: 'Exterior', value: 'exterior' }
-] satisfies { label: string, value: MaintenanceArea }[]
-const cadenceTypeItems = [
-  { label: 'Monthly', value: 'monthly' },
-  { label: 'Seasonal', value: 'seasonal' },
-  { label: 'Yearly', value: 'yearly' },
-  { label: 'Custom', value: 'custom' }
-] satisfies { label: string, value: MaintenanceCadenceType }[]
-const cadenceUnitItems = [
-  { label: 'Days', value: 'days' },
-  { label: 'Weeks', value: 'weeks' },
-  { label: 'Months', value: 'months' },
-  { label: 'Years', value: 'years' }
-] satisfies { label: string, value: MaintenanceCadenceUnit }[]
-const seasonItems = [
-  { label: 'Spring', value: 'spring' },
-  { label: 'Summer', value: 'summer' },
-  { label: 'Fall', value: 'fall' },
-  { label: 'Winter', value: 'winter' }
-] satisfies { label: string, value: MaintenanceSeason }[]
-
 const buildEmptyCadence = (): MaintenanceCadenceRow => ({
   cadence_type: 'monthly',
   cadence_interval: 1,
@@ -129,7 +50,7 @@ const buildEmptyCadence = (): MaintenanceCadenceRow => ({
   notes: ''
 })
 
-const buildEmptyForm = (): TaskForm => ({
+const buildEmptyForm = (): MaintenanceTaskFormState => ({
   title: '',
   description: '',
   area: 'interior',
@@ -140,16 +61,10 @@ const buildEmptyForm = (): TaskForm => ({
   cadences: [buildEmptyCadence()]
 })
 
-const form = reactive<TaskForm>(buildEmptyForm())
+const form = reactive<MaintenanceTaskFormState>(buildEmptyForm())
 const isEditing = computed(() => Boolean(props.task))
 const submitLabel = computed(() => isEditing.value ? 'Update Task' : 'Save Task')
 const calculatedNextDueDate = computed(() => calculateMaintenanceDueDate(form.cadences))
-
-const cleanText = (value: string | null | undefined) => {
-  const trimmedValue = value?.trim()
-
-  return trimmedValue ? trimmedValue : null
-}
 
 const setCadenceDefaults = (cadence: MaintenanceCadenceRow) => {
   if (cadence.cadence_type === 'monthly') {
@@ -194,6 +109,18 @@ const removeCadence = (index: number) => {
   if (!form.cadences.length) {
     form.cadences.push(buildEmptyCadence())
   }
+}
+
+const setArea = (value: unknown) => {
+  form.area = value as MaintenanceArea
+}
+
+const setCadenceSeason = (cadence: MaintenanceCadenceRow, value: unknown) => {
+  cadence.season = value as MaintenanceSeason
+}
+
+const setCadenceUnit = (cadence: MaintenanceCadenceRow, value: unknown) => {
+  cadence.cadence_unit = value as MaintenanceCadenceUnit
 }
 
 const populateForm = (task: MaintenanceTaskRow) => {
@@ -271,22 +198,25 @@ const saveTask = async () => {
   isSaving.value = true
 
   try {
-    const supabase = createSupabaseClient() as unknown as SupabaseClient
     const taskPayload = buildTaskPayload()
-    const taskResponse = isEditing.value && props.task
-      ? await supabase.from('home_maintenance_tasks').update(taskPayload).eq('id', props.task.id).select().single()
-      : await supabase.from('home_maintenance_tasks').insert(taskPayload).select().single()
+    const cadences = buildCadencePayloads(props.task?.id ?? '').map(({ task_id: _taskId, ...cadence }) => cadence)
 
-    if (taskResponse.error) throw new Error(taskResponse.error.message)
-    if (!taskResponse.data) throw new Error('Task was saved, but no row was returned.')
-
-    const taskId = taskResponse.data.id
-    const deleteResponse = await supabase.from('home_maintenance_task_cadences').delete().eq('task_id', taskId)
-    if (deleteResponse.error) throw new Error(deleteResponse.error.message)
-
-    for (const cadencePayload of buildCadencePayloads(taskId)) {
-      const cadenceResponse = await supabase.from('home_maintenance_task_cadences').insert(cadencePayload).select().single()
-      if (cadenceResponse.error) throw new Error(cadenceResponse.error.message)
+    if (isEditing.value && props.task) {
+      await $fetch(`/api/home-maintenance/tasks/${props.task.id}`, {
+        method: 'PUT',
+        body: {
+          task: taskPayload,
+          cadences
+        }
+      })
+    } else {
+      await $fetch('/api/home-maintenance/tasks', {
+        method: 'POST',
+        body: {
+          task: taskPayload,
+          cadences
+        }
+      })
     }
 
     toast.add({
@@ -312,7 +242,11 @@ const saveTask = async () => {
 </script>
 
 <template>
-  <form class="flex flex-col gap-5" @submit.prevent="saveTask">
+  <UForm
+    :state="form"
+    class="flex flex-col gap-5"
+    @submit="saveTask"
+  >
     <UAlert
       v-if="formError"
       title="Task could not be saved"
@@ -332,27 +266,28 @@ const saveTask = async () => {
       </UFormField>
 
       <UFormField label="Area" name="area">
-        <select v-model="form.area" class="h-9 w-full rounded-md border border-default bg-default px-3 text-sm text-highlighted outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20">
-          <option v-for="item in areaItems" :key="item.value" :value="item.value">
-            {{ item.label }}
-          </option>
-        </select>
+        <USelect
+          :model-value="form.area ?? 'interior'"
+          :items="maintenanceAreaItems"
+          class="w-full"
+          @update:model-value="setArea"
+        />
       </UFormField>
 
       <UFormField label="Priority" name="priority">
-        <select v-model="form.priority" class="h-9 w-full rounded-md border border-default bg-default px-3 text-sm text-highlighted outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20">
-          <option v-for="item in priorityItems" :key="item.value" :value="item.value">
-            {{ item.label }}
-          </option>
-        </select>
+        <USelect
+          v-model="form.priority"
+          :items="maintenancePriorityItems"
+          class="w-full"
+        />
       </UFormField>
 
       <UFormField label="Status" name="status">
-        <select v-model="form.status" class="h-9 w-full rounded-md border border-default bg-default px-3 text-sm text-highlighted outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20">
-          <option v-for="item in statusItems" :key="item.value" :value="item.value">
-            {{ item.label }}
-          </option>
-        </select>
+        <USelect
+          v-model="form.status"
+          :items="maintenanceStatusItems"
+          class="w-full"
+        />
       </UFormField>
 
       <UFormField label="Next Due" name="next_due_date">
@@ -405,22 +340,23 @@ const saveTask = async () => {
         class="grid gap-3 rounded-md border border-default p-3 sm:grid-cols-2"
       >
         <UFormField label="Cadence Type">
-          <select v-model="cadence.cadence_type" class="h-9 w-full rounded-md border border-default bg-default px-3 text-sm text-highlighted outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20">
-            <option v-for="item in cadenceTypeItems" :key="item.value" :value="item.value">
-              {{ item.label }}
-            </option>
-          </select>
+          <USelect
+            v-model="cadence.cadence_type"
+            :items="maintenanceCadenceTypeItems"
+            class="w-full"
+          />
         </UFormField>
 
         <UFormField
           v-if="cadence.cadence_type === 'seasonal'"
           label="Season"
         >
-          <select v-model="cadence.season" class="h-9 w-full rounded-md border border-default bg-default px-3 text-sm text-highlighted outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20">
-            <option v-for="item in seasonItems" :key="item.value" :value="item.value">
-              {{ item.label }}
-            </option>
-          </select>
+          <USelect
+            :model-value="cadence.season ?? 'spring'"
+            :items="maintenanceSeasonItems"
+            class="w-full"
+            @update:model-value="value => setCadenceSeason(cadence, value)"
+          />
         </UFormField>
 
         <template v-else-if="cadence.cadence_type === 'custom'">
@@ -428,11 +364,12 @@ const saveTask = async () => {
             <UInputNumber v-model="cadence.cadence_interval" :min="1" />
           </UFormField>
           <UFormField label="Unit">
-            <select v-model="cadence.cadence_unit" class="h-9 w-full rounded-md border border-default bg-default px-3 text-sm text-highlighted outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20">
-              <option v-for="item in cadenceUnitItems" :key="item.value" :value="item.value">
-                {{ item.label }}
-              </option>
-            </select>
+            <USelect
+              :model-value="cadence.cadence_unit ?? 'months'"
+              :items="maintenanceCadenceUnitItems"
+              class="w-full"
+              @update:model-value="value => setCadenceUnit(cadence, value)"
+            />
           </UFormField>
         </template>
 
@@ -486,5 +423,5 @@ const saveTask = async () => {
         :loading="isSaving"
       />
     </div>
-  </form>
+  </UForm>
 </template>

@@ -1,53 +1,21 @@
 <script setup lang="ts">
-import { addDays, isBefore, isToday, parseISO } from 'date-fns'
+import { isBefore, isToday, parseISO } from 'date-fns'
 import {
-  calculateMaintenanceDueDate,
   formatMaintenanceCadence,
-  formatMaintenanceDate,
-  type MaintenanceCadence
+  formatMaintenanceDate
 } from '~/utils/maintenanceCadence'
-import { createSupabaseClient } from '~/libs/supabaseClient'
+import type {
+  MaintenanceArea,
+  MaintenanceTaskRow,
+  MaintenanceTaskStatus
+} from '~/types/home-maintenance'
+import { formatLabel } from '~/utils/formatters'
+import { allFilterValue, pageSizeItems } from '~/utils/options/common'
+import {
+  maintenanceAreaFilterItems,
+  maintenanceStatusFilterItems
+} from '~/utils/options/homeMaintenance'
 
-type MaintenanceTaskStatus = 'active' | 'archived' | 'in_progress' | 'paused'
-type MaintenancePriority = 'high' | 'low' | 'medium'
-type MaintenanceArea = 'exterior' | 'interior'
-type MaintenanceCadenceRow = MaintenanceCadence & {
-  id: string
-  notes: string | null
-}
-type MaintenanceTaskRow = {
-  id: string
-  title: string
-  description: string | null
-  area: MaintenanceArea | null
-  next_due_date: string | null
-  last_completed_at: string | null
-  status: MaintenanceTaskStatus
-  priority: MaintenancePriority
-  notes: string | null
-  home_maintenance_task_cadences: MaintenanceCadenceRow[]
-}
-type SupabaseResult<T> = Promise<{
-  data: T | null
-  error: { message: string } | null
-}>
-type SupabaseClient = {
-  from: (table: string) => {
-    insert: (payload: Record<string, unknown>) => SupabaseResult<null>
-    select: (columns: string) => {
-      order: (column: string, options: { ascending: boolean }) => SupabaseResult<MaintenanceTaskRow[]>
-    }
-    update: (payload: Record<string, unknown>) => {
-      eq: (column: string, value: string) => SupabaseResult<null>
-    }
-  }
-}
-
-const allFilterValue = 'all'
-const pageSizeItems = [10, 25, 50].map(size => ({
-  label: `${size} per page`,
-  value: size
-}))
 const toast = useToast()
 const tasks = ref<MaintenanceTaskRow[]>([])
 const isLoading = ref(false)
@@ -62,39 +30,12 @@ const page = ref(1)
 const selectedArea = ref<MaintenanceArea | typeof allFilterValue>(allFilterValue)
 const selectedStatus = ref<MaintenanceTaskStatus | typeof allFilterValue>(allFilterValue)
 
-const areaItems = [
-  { label: 'All areas', value: allFilterValue },
-  { label: 'Interior', value: 'interior' },
-  { label: 'Exterior', value: 'exterior' }
-] satisfies { label: string, value: MaintenanceArea | typeof allFilterValue }[]
-const statusItems = [
-  { label: 'All statuses', value: allFilterValue },
-  { label: 'Active', value: 'active' },
-  { label: 'In Progress', value: 'in_progress' },
-  { label: 'Paused', value: 'paused' },
-  { label: 'Archived', value: 'archived' }
-] satisfies { label: string, value: MaintenanceTaskStatus | typeof allFilterValue }[]
-
-const formatLabel = (value: string | null | undefined) => {
-  if (!value) return '-'
-
-  return value.replace(/_/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase())
-}
-
 const refreshTasks = async () => {
   isLoading.value = true
   error.value = null
 
   try {
-    const supabase = createSupabaseClient() as unknown as SupabaseClient
-    const { data, error: taskError } = await supabase
-      .from('home_maintenance_tasks')
-      .select('*, home_maintenance_task_cadences(*)')
-      .order('next_due_date', { ascending: true })
-
-    if (taskError) throw new Error(taskError.message)
-
-    tasks.value = data ?? []
+    tasks.value = await $fetch<MaintenanceTaskRow[]>('/api/home-maintenance/tasks')
   } catch (refreshError) {
     error.value = refreshError instanceof Error ? refreshError.message : 'Maintenance overview could not be loaded.'
   } finally {
@@ -151,42 +92,17 @@ const resultEnd = computed(() => Math.min(page.value * selectedPageSize.value, r
 
 const modalTitle = computed(() => selectedTask.value ? 'Edit Maintenance Task' : 'Add Maintenance Task')
 
-const getNextDueDate = (task: MaintenanceTaskRow) => {
-  const fromDate = task.next_due_date
-    ? addDays(parseISO(task.next_due_date), 1)
-    : addDays(new Date(), 1)
-
-  return calculateMaintenanceDueDate(task.home_maintenance_task_cadences, fromDate)
-}
-
 const updateTaskDueDate = async (task: MaintenanceTaskRow, action: 'complete' | 'skip') => {
   updatingTaskId.value = task.id
 
   try {
-    const supabase = createSupabaseClient() as unknown as SupabaseClient
-    const now = new Date().toISOString()
-    const nextDueDate = getNextDueDate(task)
-
-    if (action === 'complete') {
-      const completionResponse = await supabase.from('home_maintenance_completions').insert({
-        task_id: task.id,
-        completed_at: now,
+    const { nextDueDate } = await $fetch<{ nextDueDate: string }>(`/api/home-maintenance/tasks/${task.id}/due-date`, {
+      method: 'PATCH',
+      body: {
+        action,
         notes: 'Completed from maintenance overview.'
-      })
-
-      if (completionResponse.error) throw new Error(completionResponse.error.message)
-    }
-
-    const updateResponse = await supabase
-      .from('home_maintenance_tasks')
-      .update({
-        last_completed_at: action === 'complete' ? now : task.last_completed_at,
-        next_due_date: nextDueDate || null,
-        status: 'active'
-      })
-      .eq('id', task.id)
-
-    if (updateResponse.error) throw new Error(updateResponse.error.message)
+      }
+    })
 
     toast.add({
       title: action === 'complete' ? 'Task completed' : 'Task skipped',
@@ -274,11 +190,10 @@ watch([search, selectedArea, selectedStatus, selectedPageSize], () => {
     </section>
 
     <UModal
-      :open="isModalOpen"
+      v-model:open="isModalOpen"
       :title="modalTitle"
       :close="{ color: 'primary', variant: 'outline', class: 'rounded-full', onClick: closeModal }"
       :ui="{ content: 'sm:max-w-4xl' }"
-      @update:open="isModalOpen = $event"
       @after:leave="resetForm"
     >
       <template #body>
@@ -342,11 +257,11 @@ watch([search, selectedArea, selectedStatus, selectedPageSize], () => {
         />
         <USelect
           v-model="selectedArea"
-          :items="areaItems"
+          :items="maintenanceAreaFilterItems"
         />
         <USelect
           v-model="selectedStatus"
-          :items="statusItems"
+          :items="maintenanceStatusFilterItems"
         />
         <USelect
           v-model="selectedPageSize"

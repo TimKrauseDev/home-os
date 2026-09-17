@@ -14,35 +14,6 @@ const applyDay = (date: Date, preferredDay?: number | null) => {
   return setDate(date, Math.min(preferredDay, 28))
 }
 
-export const formatMaintenanceDate = (value: string | null | undefined) => {
-  if (!value) return '-'
-
-  return new Intl.DateTimeFormat('en-US', {
-    dateStyle: 'medium',
-    timeStyle: value.includes('T') ? 'short' : undefined
-  }).format(new Date(value))
-}
-
-export const formatMaintenanceCadence = (cadence: MaintenanceCadence) => {
-  if (cadence.cadence_type === 'monthly') {
-    return cadence.preferred_day ? `Monthly on day ${cadence.preferred_day}` : 'Monthly'
-  }
-
-  if (cadence.cadence_type === 'yearly') {
-    const month = cadence.preferred_month ? format(setMonth(new Date(), cadence.preferred_month - 1), 'MMMM') : 'year'
-    return `Yearly in ${month}${cadence.preferred_day ? ` on day ${cadence.preferred_day}` : ''}`
-  }
-
-  if (cadence.cadence_type === 'seasonal') {
-    return cadence.season ? `${cadence.season.replace(/\b\w/g, letter => letter.toUpperCase())}` : 'Seasonal'
-  }
-
-  const interval = cadence.cadence_interval ?? 1
-  const unit = cadence.cadence_unit ?? 'months'
-
-  return `Every ${interval} ${unit}`
-}
-
 export const calculateMaintenanceDueDate = (cadences: MaintenanceCadence[], fromDate = new Date()) => {
   const today = startOfDay(fromDate)
   const dueDates = cadences
