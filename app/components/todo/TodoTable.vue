@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui'
+import type { SortingState } from '@tanstack/vue-table'
 import type { Row } from '@tanstack/table-core'
 import type { TodoItem } from '~/types/todo'
 
@@ -13,6 +14,15 @@ const { copy } = useClipboard()
 defineProps<{
   data: TodoItem[]
 }>()
+
+const emit = defineEmits<{
+  toggle: [todo: TodoItem]
+}>()
+
+const sorting = ref<SortingState>([
+  { id: 'completed', desc: false },
+  { id: 'due_date', desc: false }
+])
 
 function getRowItems(row: Row<TodoItem>) {
   return [
@@ -40,7 +50,7 @@ function getRowItems(row: Row<TodoItem>) {
         ? 'Mark as pending'
         : 'Mark as completed',
       onSelect() {
-        row.original.completed = !row.original.completed
+        emit('toggle', row.original)
       }
     }
   ]
@@ -66,15 +76,24 @@ const columns: TableColumn<TodoItem>[] = [
       })
   },
   {
-    accessorKey: 'id',
-    header: '#',
-    cell: ({ row }) => `#${row.getValue('id')}`
-  },
-  {
-    accessorKey: 'date',
+    accessorKey: 'due_date',
     header: 'Date',
+    sortingFn: (rowA, rowB) => {
+      const dueDateA = rowA.getValue<string | null>('due_date')
+      const dueDateB = rowB.getValue<string | null>('due_date')
+
+      if (!dueDateA && !dueDateB) return 0
+      if (!dueDateA) return 1
+      if (!dueDateB) return -1
+
+      const dateA = new Date(dueDateA).getTime()
+      const dateB = new Date(dueDateB).getTime()
+      return dateA - dateB
+    },
     cell: ({ row }) => {
-      return new Date(row.getValue('date')).toLocaleString('en-US', {
+      if (!row.getValue('due_date')) return 'N/A'
+
+      return new Date(row.getValue('due_date')).toLocaleString('en-US', {
         weekday: 'short',
         day: 'numeric',
         month: 'short',
@@ -143,7 +162,7 @@ const columns: TableColumn<TodoItem>[] = [
         ref="table"
         :data=" data "
         :columns=" columns "
-        sticky
+        :sorting=" sorting "
         class="h-96"
       >
         <template #expanded="{ row }">

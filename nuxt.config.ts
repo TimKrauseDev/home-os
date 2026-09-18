@@ -12,6 +12,12 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  runtimeConfig: {
+    supabaseUrl: process.env.SUPABASE_URL,
+    supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    supabasePublishableKey: process.env.SUPABASE_PUBLISHABLE_KEY
+  },
+
   routeRules: {
     '/api/**': {
       cors: true

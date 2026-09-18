@@ -1,6 +1,6 @@
 export interface TodoItem {
-  id: number
-  date: string
+  id: string
+  due_date: string | null
   title: string
   category: string
   completed: boolean

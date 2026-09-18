@@ -1,22 +1,28 @@
 <script setup lang="ts">
 import type { TodoItem } from '~/types/todo'
 
-const data = ref<TodoItem[]>([
-  {
-    id: 1,
-    date: new Date(Date.UTC(2024, 2, 8, 20, 15)).toISOString(),
-    title: 'Sample Todo',
-    category: 'General',
-    completed: false
-  },
-  {
-    id: 2,
-    date: new Date().toISOString(),
-    title: 'Another Sample Todo',
-    category: 'Space',
-    completed: true
+const { data, refresh } = await useFetch<TodoItem[]>('/api/todos', { default: () => [] })
+
+async function toggleTodo(todo: TodoItem) {
+  const completed = !todo.completed
+
+  data.value = data.value.map(item =>
+    item.id === todo.id ? { ...item, completed } : item
+  )
+
+  try {
+    await $fetch(`/api/todos/${todo.id}`, {
+      method: 'PATCH',
+      body: { completed }
+    })
+  } catch (error) {
+    data.value = data.value.map(item =>
+      item.id === todo.id ? { ...item, completed: todo.completed } : item
+    )
+    console.error(error)
   }
-])
+  await refresh()
+}
 </script>
 
 <template>
@@ -34,23 +40,13 @@ const data = ref<TodoItem[]>([
     <template #body>
       <h1>Todo Page</h1>
       <UCard>
-        <TodoTable :data=" data " />
+        <TodoTable
+          :data=" data "
+          @toggle="toggleTodo"
+        />
       </UCard>
       <UCard>
         <TodoTableExample />
-      </UCard>
-      <UCard>
-        <ul>
-          <li v-for="(item, index) in data" :key=" index ">
-            <input
-              v-model=" item.status "
-              type="checkbox"
-              :true-value=" 'completed' "
-              :false-value=" 'pending' "
-            >
-            <span :class=" { 'line-through': item.status === 'completed' } ">{{ item.title }}</span>
-          </li>
-        </ul>
       </UCard>
     </template>
   </UDashboardPanel>
