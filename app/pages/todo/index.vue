@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { TodoItem } from '~/types/todo'
 
+const toast = useToast()
+
 const { data, refresh } = await useFetch<TodoItem[]>('/api/todos', { default: () => [] })
 
 async function toggleTodo(todo: TodoItem) {
@@ -20,8 +22,40 @@ async function toggleTodo(todo: TodoItem) {
       item.id === todo.id ? { ...item, completed: todo.completed } : item
     )
     console.error(error)
+    toast.add({
+      title: 'Failed to update task.',
+      color: 'error',
+      icon: 'i-lucide-alert-circle'
+    })
   }
   await refresh()
+  toast.add({
+    title: 'Task updated successfully.',
+    color: 'success',
+    icon: 'i-lucide-check-circle'
+  })
+}
+
+async function deleteTodo(todo: TodoItem) {
+  try {
+    await $fetch(`/api/todos/${todo.id}`, {
+      method: 'DELETE'
+    })
+  } catch (error) {
+    console.error(error)
+    toast.add({
+      title: 'Failed to delete task.',
+      color: 'error',
+      icon: 'i-lucide-alert-circle'
+    })
+    return
+  }
+  await refresh()
+  toast.add({
+    title: 'Task deleted successfully.',
+    color: 'success',
+    icon: 'i-lucide-check-circle'
+  })
 }
 </script>
 
@@ -38,15 +72,12 @@ async function toggleTodo(todo: TodoItem) {
 
     <!-- Panel Body -->
     <template #body>
-      <h1>Todo Page</h1>
       <UCard>
         <TodoTable
           :data=" data "
           @toggle="toggleTodo"
+          @delete="deleteTodo"
         />
-      </UCard>
-      <UCard>
-        <TodoTableExample />
       </UCard>
     </template>
   </UDashboardPanel>

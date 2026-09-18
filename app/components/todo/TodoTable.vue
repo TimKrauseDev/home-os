@@ -17,6 +17,7 @@ defineProps<{
 
 const emit = defineEmits<{
   toggle: [todo: TodoItem]
+  delete: [todo: TodoItem]
 }>()
 
 const sorting = ref<SortingState>([
@@ -31,7 +32,19 @@ function getRowItems(row: Row<TodoItem>) {
       label: 'Actions'
     },
     {
-      label: 'Copy task ID',
+      label: 'View',
+      icon: 'i-lucide-eye',
+      onSelect() {
+        toast.add({
+          title: 'Viewing details is not implemented yet.',
+          color: 'info',
+          icon: 'i-lucide-info'
+        })
+      }
+    },
+    {
+      label: 'Copy ID',
+      icon: 'i-lucide-copy',
       onSelect() {
         copy(row.original.id.toString())
 
@@ -43,14 +56,25 @@ function getRowItems(row: Row<TodoItem>) {
       }
     },
     {
+      label: row.original.completed
+        ? 'Mark Pending'
+        : 'Mark Completed',
+      icon: row.original.completed
+        ? 'i-lucide-square'
+        : 'i-lucide-check-square',
+      onSelect() {
+        emit('toggle', row.original)
+      }
+    },
+    {
       type: 'separator'
     },
     {
-      label: row.original.completed
-        ? 'Mark as pending'
-        : 'Mark as completed',
+      label: 'Delete',
+      color: 'error',
+      icon: 'i-lucide-trash',
       onSelect() {
-        emit('toggle', row.original)
+        emit('delete', row.original)
       }
     }
   ]
@@ -156,13 +180,14 @@ const columns: TableColumn<TodoItem>[] = [
 
 <template>
   <div>
-    <h2>Table</h2>
+    <h2>Manage Todo Items</h2>
     <div class="flex-1 divide-y divide-accented w-full">
       <UTable
         ref="table"
         :data=" data "
         :columns=" columns "
         :sorting=" sorting "
+        sticky
         class="h-96"
       >
         <template #expanded="{ row }">
