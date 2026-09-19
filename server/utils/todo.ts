@@ -18,6 +18,13 @@ export const todoCreateSchema = z.object({
   completed: z.boolean().default(false)
 })
 
+export const todoReplaceSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  category: z.enum(todoCategories),
+  due_date: z.string().trim().min(1).nullable(),
+  completed: z.boolean()
+})
+
 export const todoUpdateSchema = z.object({
   title: z.string().trim().min(1).max(200).optional(),
   category: z.enum(todoCategories).optional(),

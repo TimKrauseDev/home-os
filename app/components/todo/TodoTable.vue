@@ -35,11 +35,7 @@ function getRowItems(row: Row<TodoItem>) {
       label: 'View',
       icon: 'i-lucide-eye',
       onSelect() {
-        toast.add({
-          title: 'Viewing details is not implemented yet.',
-          color: 'info',
-          icon: 'i-lucide-info'
-        })
+        navigateTo(`/todo/${row.original.id}`)
       }
     },
     {
