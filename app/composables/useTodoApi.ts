@@ -5,16 +5,16 @@ export function useTodoApi() {
 
   // Fetch a single todo item by its ID
   const fetchTodo = async (id: string) =>
-    await useFetch<TodoItem>(() => `/api/todos/${id}`)
+    await useFetch<TodoItem>(() => `/api/todo/${id}`)
 
   const fetchTodos = async () =>
-    await useFetch<TodoItem[]>('/api/todos', { default: () => [] })
+    await useFetch<TodoItem[]>('/api/todo', { default: () => [] })
 
   // Add a new todo item
   const addTodo = async (data: NewTodo) => {
     console.log('Adding new todo:', data)
     try {
-      await $fetch('/api/todos', {
+      await $fetch('/api/todo', {
         method: 'POST',
         body: {
           ...data,
@@ -39,7 +39,7 @@ export function useTodoApi() {
   // Update an existing todo item
   const updateTodo = async (id: string, data: NewTodo) => {
     try {
-      await $fetch(`/api/todos/${id}`, {
+      await $fetch(`/api/todo/${id}`, {
         method: 'PUT',
         body: {
           ...data,
@@ -64,7 +64,7 @@ export function useTodoApi() {
   // Update todo completion status
   const updateTodoCompletion = async (todo: TodoItem) => {
     try {
-      await $fetch(`/api/todos/${todo.id}`, {
+      await $fetch(`/api/todo/${todo.id}`, {
         method: 'PATCH',
         body: { completed: !todo.completed }
       })
@@ -89,7 +89,7 @@ export function useTodoApi() {
   // Delete a todo item by its ID
   const deleteTodo = async (id: string) => {
     try {
-      await $fetch(`/api/todos/${id}`, {
+      await $fetch(`/api/todo/${id}`, {
         method: 'DELETE'
       })
       toast.add({

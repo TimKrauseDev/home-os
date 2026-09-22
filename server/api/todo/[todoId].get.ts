@@ -4,7 +4,7 @@ export default defineEventHandler(async (event) => {
   const todoId = requireTodoId(event)
   const supabase = useServerSupabase()
   const { data, error } = await supabase
-    .from('todos')
+    .from('todo')
     .select('*')
     .eq('id', todoId)
     .maybeSingle()

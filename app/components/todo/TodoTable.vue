@@ -175,8 +175,8 @@ const columns: TableColumn<TodoItem>[] = [
 </script>
 
 <template>
-  <div>
-    <div class="flex-1 divide-y divide-accented w-full">
+  <div class="min-w-0 max-w-full">
+    <div class="flex-1 min-w-0 max-w-full overflow-x-auto divide-y divide-accented">
       <UTable
         ref="table"
         :data=" data "
@@ -186,10 +186,12 @@ const columns: TableColumn<TodoItem>[] = [
         class="h-96"
       >
         <template #expanded="{ row }">
-          <p class="font-bold mb-4">
-            Details:
-          </p>
-          <pre>{{ row.original }}</pre>
+          <div class="min-w-0 max-w-full overflow-hidden">
+            <p class="font-bold mb-4">
+              Details:
+            </p>
+            <pre class="max-w-full overflow-x-auto whitespace-pre-wrap break-all text-xs">{{ row.original }}</pre>
+          </div>
         </template>
       </UTable>
     </div>

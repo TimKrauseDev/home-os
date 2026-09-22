@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
   const supabase = useServerSupabase()
 
   let request = supabase
-    .from('todos')
+    .from('todo')
     .select('*')
     .order('completed', { ascending: true })
     .order('due_date', { ascending: true, nullsFirst: false })

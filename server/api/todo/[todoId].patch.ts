@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
   const supabase = useServerSupabase()
 
   const { data, error } = await supabase
-    .from('todos')
+    .from('todo')
     .update({
       ...updates,
       updated_at: new Date().toISOString()

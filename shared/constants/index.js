@@ -1,4 +1,4 @@
-import { TODO_CATEGORIES } from './todos'
+import { TODO_CATEGORIES } from './todo'
 
 export {
   TODO_CATEGORIES

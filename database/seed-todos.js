@@ -81,13 +81,13 @@ const buildTodo = () => {
 const seedTodos = async () => {
   faker.seed(20260917)
 
-  await clearTables(['todos'])
+  await clearTables(['todo'])
 
   const todos = faker.helpers.multiple(buildTodo, {
     count: TODO_COUNT
   })
 
-  await insertRows('todos', todos)
+  await insertRows('todo', todos)
 
   console.log(`Seeded ${todos.length} todos.`)
 }

@@ -1,4 +1,4 @@
-drop table if exists todos;
+drop table if exists todo;
 
 drop type if exists todo_category;
 
@@ -13,7 +13,7 @@ create type todo_category as enum (
   'Shopping'
 );
 
-create table todos (
+create table todo (
   id uuid primary key default gen_random_uuid(),
   due_date timestamp with time zone,
   title text not null check (length(trim(title)) > 0),
@@ -25,5 +25,5 @@ create table todos (
   updated_at timestamp with time zone default now() not null
 );
 
-create index todos_completed_date_idx on todos(completed, due_date);
-create index todos_category_idx on todos(category);
+create index todo_completed_date_idx on todo(completed, due_date);
+create index todo_category_idx on todo(category);

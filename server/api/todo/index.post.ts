@@ -4,7 +4,7 @@ export default defineEventHandler(async (event) => {
   const todo = await readValidatedBody(event, body => todoCreateSchema.parse(body))
   const supabase = useServerSupabase()
   const { data, error } = await supabase
-    .from('todos')
+    .from('todo')
     .insert(todo)
     .select('*')
     .single()
