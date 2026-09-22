@@ -11,8 +11,17 @@ export const todoCategories = [
   'Shopping'
 ] as const
 
+const emptyTodoContent = {
+  type: 'doc',
+  content: [{ type: 'paragraph' }]
+}
+
+const todoContentSchema = z.record(z.string(), z.unknown())
+
 export const todoCreateSchema = z.object({
   title: z.string().trim().min(1).max(200),
+  description: z.string().trim().max(1000).default(''),
+  content: todoContentSchema.default(emptyTodoContent),
   category: z.enum(todoCategories).default('General'),
   due_date: z.string().trim().min(1).nullable().default(null),
   completed: z.boolean().default(false)
@@ -20,6 +29,8 @@ export const todoCreateSchema = z.object({
 
 export const todoReplaceSchema = z.object({
   title: z.string().trim().min(1).max(200),
+  description: z.string().trim().max(1000),
+  content: todoContentSchema,
   category: z.enum(todoCategories),
   due_date: z.string().trim().min(1).nullable(),
   completed: z.boolean()
@@ -27,6 +38,8 @@ export const todoReplaceSchema = z.object({
 
 export const todoUpdateSchema = z.object({
   title: z.string().trim().min(1).max(200).optional(),
+  description: z.string().trim().max(1000).optional(),
+  content: todoContentSchema.optional(),
   category: z.enum(todoCategories).optional(),
   due_date: z.string().trim().min(1).nullable().optional(),
   completed: z.boolean().optional()

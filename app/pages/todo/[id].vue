@@ -16,6 +16,11 @@ if (!data.value) navigateTo('/todo')
 
 const formData = reactive<NewTodo>({
   title: data.value?.title ?? '',
+  description: data.value?.description ?? '',
+  content: data.value?.content ?? {
+    type: 'doc',
+    content: [{ type: 'paragraph' }]
+  },
   completed: data.value?.completed ?? false,
   category: data.value?.category ?? 'General',
   due_date: data.value?.due_date ?? null
@@ -50,7 +55,7 @@ const handleSave = async () => {
     <!-- Panel Body -->
     <template #body>
       <h1>Todo Details Page</h1>
-      <pre>{{ data }}</pre>
+
       <UCard>
         <template #header>
           Todo Details
@@ -61,6 +66,14 @@ const handleSave = async () => {
             <UInput
               v-model="formData.title"
               label="Title"
+              class="w-full"
+            />
+          </UFormField>
+          <UFormField label="Description">
+            <UTextarea
+              v-model="formData.description"
+              class="w-full"
+              label="Description"
             />
           </UFormField>
           <UFormField label="Completed">
@@ -82,6 +95,9 @@ const handleSave = async () => {
               label="Due Date"
               type="date"
             />
+          </UFormField>
+          <UFormField label="Content">
+            <TiptapEditor v-model="formData.content" />
           </UFormField>
         </UForm>
 

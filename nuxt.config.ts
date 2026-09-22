@@ -10,7 +10,10 @@ export default defineNuxtConfig({
     enabled: true
   },
 
-  css: ['~/assets/css/main.css'],
+  css: [
+    '~/assets/css/tailwind.css',
+    '~/assets/scss/main.scss'
+  ],
 
   runtimeConfig: {
     supabaseUrl: process.env.SUPABASE_URL,

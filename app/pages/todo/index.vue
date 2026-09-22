@@ -40,6 +40,11 @@ async function handleDeleteTodo(todo: TodoItem) {
 
 const formData = reactive<NewTodo>({
   title: '',
+  description: '',
+  content: {
+    type: 'doc',
+    content: [{ type: 'paragraph' }]
+  },
   completed: false,
   category: 'General',
   due_date: null
@@ -54,6 +59,11 @@ const dueDateInput = computed({
 
 function resetFormData() {
   formData.title = ''
+  formData.description = ''
+  formData.content = {
+    type: 'doc',
+    content: [{ type: 'paragraph' }]
+  }
   formData.completed = false
   formData.category = 'General'
   formData.due_date = null
@@ -113,6 +123,13 @@ const handleSave = async () => {
                       label="Title"
                     />
                   </UFormField>
+                  <UFormField label="Description">
+                    <UTextarea
+                      v-model="formData.description"
+                      class="w-full"
+                      label="Description"
+                    />
+                  </UFormField>
                   <UFormField label="Completed">
                     <UCheckbox
                       v-model="formData.completed"
@@ -132,6 +149,9 @@ const handleSave = async () => {
                       label="Due Date"
                       type="date"
                     />
+                  </UFormField>
+                  <UFormField label="Content">
+                    <TiptapEditor v-model="formData.content" />
                   </UFormField>
                 </UForm>
               </template>

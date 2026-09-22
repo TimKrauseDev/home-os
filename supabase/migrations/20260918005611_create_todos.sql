@@ -17,7 +17,9 @@ create table todos (
   id uuid primary key default gen_random_uuid(),
   due_date timestamp with time zone,
   title text not null check (length(trim(title)) > 0),
+  description text not null default '',
   category todo_category not null default 'General',
+  content jsonb not null default '{"type":"doc","content":[{"type":"paragraph"}]}'::jsonb,
   completed boolean not null default false,
   created_at timestamp with time zone default now() not null,
   updated_at timestamp with time zone default now() not null

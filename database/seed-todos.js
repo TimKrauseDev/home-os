@@ -31,6 +31,20 @@ const todoTitles = [
 const buildTodo = () => {
   const completed = faker.datatype.boolean({ probability: 0.35 })
   const hasDueDate = faker.datatype.boolean({ probability: 0.75 })
+  const title = faker.helpers.arrayElement(todoTitles)
+  const description = faker.lorem.sentence()
+  const listItems = faker.helpers.multiple(
+    () => ({
+      type: 'listItem',
+      content: [
+        {
+          type: 'paragraph',
+          content: [{ type: 'text', text: faker.lorem.sentence() }]
+        }
+      ]
+    }),
+    { count: { min: 2, max: 4 } }
+  )
 
   return {
     due_date: hasDueDate
@@ -39,7 +53,26 @@ const buildTodo = () => {
           to: faker.date.soon({ days: 60 })
         }).toISOString()
       : null,
-    title: faker.helpers.arrayElement(todoTitles),
+    title,
+    description,
+    content: {
+      type: 'doc',
+      content: [
+        {
+          type: 'heading',
+          attrs: { level: 2 },
+          content: [{ type: 'text', text: title }]
+        },
+        {
+          type: 'paragraph',
+          content: [{ type: 'text', text: faker.lorem.paragraph() }]
+        },
+        {
+          type: 'bulletList',
+          content: listItems
+        }
+      ]
+    },
     category: faker.helpers.arrayElement(categories),
     completed
   }
