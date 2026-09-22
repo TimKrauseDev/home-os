@@ -1,61 +1,71 @@
 <script setup lang="ts">
-import type { TodoItem } from '~/types/todo'
+import type { TodoItem, NewTodo } from '~/types/todo'
+import { TODO_CATEGORIES } from '#shared/constants'
 
-const toast = useToast()
+const {
+  // fetchTodo,
+  fetchTodos,
+  addTodo,
+  updateTodoCompletion,
+  deleteTodo
+} = useTodoApi()
 
-const { data, refresh } = await useFetch<TodoItem[]>('/api/todos', { default: () => [] })
+const todoCategories = ref(TODO_CATEGORIES)
+const isNewTodoModalOpen = ref(false)
 
-async function toggleTodo(todo: TodoItem) {
+const { data, refresh } = await fetchTodos()
+
+async function handleToggleTodoCompletion(todo: TodoItem) {
   const completed = !todo.completed
 
   data.value = data.value.map(item =>
     item.id === todo.id ? { ...item, completed } : item
   )
 
-  try {
-    await $fetch(`/api/todos/${todo.id}`, {
-      method: 'PATCH',
-      body: { completed }
-    })
-  } catch (error) {
+  const success = await updateTodoCompletion(todo)
+
+  if (success) {
+    await refresh()
+  } else {
     data.value = data.value.map(item =>
       item.id === todo.id ? { ...item, completed: todo.completed } : item
     )
-    console.error(error)
-    toast.add({
-      title: 'Failed to update task.',
-      color: 'error',
-      icon: 'i-lucide-alert-circle'
-    })
   }
-  await refresh()
-  toast.add({
-    title: 'Task updated successfully.',
-    color: 'success',
-    icon: 'i-lucide-check-circle'
-  })
 }
 
-async function deleteTodo(todo: TodoItem) {
-  try {
-    await $fetch(`/api/todos/${todo.id}`, {
-      method: 'DELETE'
-    })
-  } catch (error) {
-    console.error(error)
-    toast.add({
-      title: 'Failed to delete task.',
-      color: 'error',
-      icon: 'i-lucide-alert-circle'
-    })
-    return
-  }
+async function handleDeleteTodo(todo: TodoItem) {
+  await deleteTodo(todo.id)
   await refresh()
-  toast.add({
-    title: 'Task deleted successfully.',
-    color: 'success',
-    icon: 'i-lucide-check-circle'
-  })
+}
+
+const formData = reactive<NewTodo>({
+  title: '',
+  completed: false,
+  category: 'General',
+  due_date: null
+})
+
+const dueDateInput = computed({
+  get: () => formData.due_date?.slice(0, 10) ?? '',
+  set: (value) => {
+    formData.due_date = value || null
+  }
+})
+
+function resetFormData() {
+  formData.title = ''
+  formData.completed = false
+  formData.category = 'General'
+  formData.due_date = null
+  isNewTodoModalOpen.value = false
+}
+
+const handleSave = async () => {
+  const saveNewTodo = { ...formData }
+  resetFormData()
+
+  await addTodo(saveNewTodo)
+  await refresh()
 }
 </script>
 
@@ -72,12 +82,69 @@ async function deleteTodo(todo: TodoItem) {
 
     <!-- Panel Body -->
     <template #body>
-      <UCard>
+      <UCard
+        title="Manage Todo Items"
+      >
         <TodoTable
           :data=" data "
-          @toggle="toggleTodo"
-          @delete="deleteTodo"
+          @toggle="handleToggleTodoCompletion"
+          @delete="handleDeleteTodo"
         />
+        <template #footer>
+          <div class="flex justify-end">
+            <UModal
+              title="Add Todo Item"
+              :open="isNewTodoModalOpen"
+              :close="{
+                color: 'primary',
+                variant: 'outline',
+                class: 'rounded-full'
+              }"
+            >
+              <UButton
+                label="Add Item"
+                @click="isNewTodoModalOpen = true"
+              />
+              <template #body>
+                <UForm :state="formData" class="space-y-4">
+                  <UFormField label="Title">
+                    <UInput
+                      v-model="formData.title"
+                      label="Title"
+                    />
+                  </UFormField>
+                  <UFormField label="Completed">
+                    <UCheckbox
+                      v-model="formData.completed"
+                      label="Completed"
+                    />
+                  </UFormField>
+                  <UFormField label="Category">
+                    <USelect
+                      v-model="formData.category"
+                      :items="todoCategories"
+                      label="Category"
+                    />
+                  </UFormField>
+                  <UFormField label="Due Date">
+                    <UInput
+                      v-model="dueDateInput"
+                      label="Due Date"
+                      type="date"
+                    />
+                  </UFormField>
+                </UForm>
+              </template>
+              <template #footer>
+                <UButton
+                  label="Save"
+                  color="primary"
+                  @click="handleSave"
+                />
+              </template>
+            </UModal>
+          </div>
+        </template>
       </UCard>
     </template>
   </UDashboardPanel>

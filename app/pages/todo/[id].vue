@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { TodoItem } from '~/types/todo'
+import type { NewTodo } from '~/types/todo'
 import { TODO_CATEGORIES } from '#shared/constants'
 
 const {
@@ -14,8 +14,7 @@ const { data, refresh } = await fetchTodo(String(todoId))
 
 if (!data.value) navigateTo('/todo')
 
-const formData = reactive<TodoItem>({
-  id: data.value?.id ?? '',
+const formData = reactive<NewTodo>({
   title: data.value?.title ?? '',
   completed: data.value?.completed ?? false,
   category: data.value?.category ?? 'General',
@@ -32,7 +31,7 @@ const dueDateInput = computed({
 const todoCategories = ref(TODO_CATEGORIES)
 
 const handleSave = async () => {
-  await updateTodo(formData)
+  await updateTodo(todoId as string, formData)
   await refresh()
 }
 </script>

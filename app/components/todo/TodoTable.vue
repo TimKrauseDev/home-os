@@ -176,7 +176,6 @@ const columns: TableColumn<TodoItem>[] = [
 
 <template>
   <div>
-    <h2>Manage Todo Items</h2>
     <div class="flex-1 divide-y divide-accented w-full">
       <UTable
         ref="table"
